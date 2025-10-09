@@ -7,6 +7,7 @@ const prisma = new PrismaClient()
 
 interface UpdateArticleData {
   title?: string
+  slug?: string
   description?: string
   content?: string
   imageUrl?: string
@@ -14,6 +15,7 @@ interface UpdateArticleData {
   categoryId?: number
   authorId?: number
   published?: boolean
+  type?: 'analise' | 'lista'
   tagIds?: number[]
   metadata?: {
     seoTitle?: string | null
@@ -169,9 +171,37 @@ async function handlePut(request: NextRequest, user: AuthenticatedUser, { params
       }
     }
 
-    // Gerar novo slug se o título mudou
+    // Processar slug: usar slug manual se fornecido, senão gerar automaticamente se título mudou
     let newSlug = existingArticle.slug
-    if (data!.title && data!.title !== existingArticle.title) {
+    
+    if (data!.slug) {
+      // Slug manual fornecido - validar formato e unicidade
+      const slug = data!.slug.trim()
+      
+      if (!slug) {
+        return createErrorResponse('Slug não pode estar vazio', 400)
+      }
+      
+      // Validar formato do slug (apenas letras, números, hífens e underscores)
+      if (!/^[a-z0-9-_]+$/.test(slug)) {
+        return createErrorResponse('Slug deve conter apenas letras minúsculas, números, hífens e underscores', 400)
+      }
+      
+      const slugExists = await prisma.article.findFirst({ 
+        where: { 
+          slug: slug, 
+          blogId: existingArticle.blogId,
+          id: { not: articleId }
+        } 
+      })
+      
+      if (slugExists) {
+        return createErrorResponse('Este slug já está sendo usado por outro artigo', 400)
+      }
+      
+      newSlug = slug
+    } else if (data!.title && data!.title !== existingArticle.title) {
+      // Título mudou mas slug não foi fornecido - gerar automaticamente
       const baseSlug = generateSlug(data!.title)
       
       newSlug = baseSlug
@@ -205,6 +235,7 @@ async function handlePut(request: NextRequest, user: AuthenticatedUser, { params
           ...(data!.categoryId && { categoryId: data!.categoryId }),
           ...(data!.authorId && { authorId: data!.authorId }),
           ...(data!.published !== undefined && { published: data!.published }),
+          ...(data!.type && { type: data!.type }),
           ...(data!.metadata && { metadata: data!.metadata }),
           slug: newSlug,
           updatedAt: new Date()

@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import { getSession } from '@auth0/nextjs-auth0'
 import { findOrCreateUser, checkBlogAccess } from '@/lib/auth-db'
-import { generateSlug } from '@/lib/slug-utils'
 
 const prisma = new PrismaClient()
 
@@ -111,24 +110,15 @@ export async function POST(
       }
     }
 
-    // Gerar slug único
-    const baseSlug = generateSlug(title)
-    console.log('🔗 Gerando slug:', { title, baseSlug })
-    
-    let slug = baseSlug
-    let counter = 1
-    
-    // Verificar se slug já existe
-    while (await prisma.article.findFirst({ where: { slug, blogId } })) {
-      slug = `${baseSlug}-${counter}`
-      counter++
-    }
+    // Criar slug temporário baseado no ID que será gerado
+    // O slug será definido manualmente na página de edição
+    const tempSlug = `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 
     // Criar artigo
     const article = await prisma.article.create({
       data: {
         title: title.trim(),
-        slug,
+        slug: tempSlug,
         content: content.trim(),
         description: description.trim(),
         date: new Date(),

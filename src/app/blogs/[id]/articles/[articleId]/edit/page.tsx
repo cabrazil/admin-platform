@@ -58,6 +58,7 @@ interface Article {
   authorId: number
   slug: string
   keywords: string[]
+  type: 'analise' | 'lista'
   tags?: Array<{ id: number; name: string }>
   metadata?: {
     seoTitle?: string
@@ -225,6 +226,7 @@ export default function EditArticlePage() {
       // Filtrar apenas os campos que podem ser atualizados
       const updateData = {
         title: article.title,
+        slug: article.slug,
         description: article.description,
         content: article.content,
         imageUrl: article.imageUrl,
@@ -232,6 +234,7 @@ export default function EditArticlePage() {
         categoryId: article.categoryId,
         authorId: article.authorId,
         published: article.published,
+        type: article.type,
         tagIds: selectedTagIds,
         metadata: {
           seoTitle: seoTitle.trim() || null,
@@ -344,19 +347,7 @@ export default function EditArticlePage() {
                 <input
                   type="text"
                   value={article.title}
-                  onChange={(e) => {
-                    const newTitle = e.target.value;
-                    setArticle({ ...article, title: newTitle });
-                    
-                    // Gerar slug automaticamente se o slug atual foi gerado automaticamente
-                    // ou se o slug está vazio
-                    if (!article.slug || article.slug === generateSlug(article.title)) {
-                      const newSlug = generateSlug(newTitle);
-                      setArticle(prev => ({ ...prev, title: newTitle, slug: newSlug }));
-                    } else {
-                      setArticle(prev => ({ ...prev, title: newTitle }));
-                    }
-                  }}
+                  onChange={(e) => setArticle({ ...article, title: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
@@ -623,6 +614,24 @@ export default function EditArticlePage() {
                   />
                 </div>
               )}
+
+              {/* Tipo do Artigo */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tipo do Artigo
+                </label>
+                <select
+                  value={article.type}
+                  onChange={(e) => setArticle({ ...article, type: e.target.value as 'analise' | 'lista' })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="analise">Análise</option>
+                  <option value="lista">Lista</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Selecione o tipo de conteúdo do artigo
+                </p>
+              </div>
             </div>
           </div>
 
