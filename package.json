@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "copy-vibesfilm-images": "./scripts/copy-vibesfilm-images.sh"
   },
   "dependencies": {
     "@auth0/nextjs-auth0": "^3.8.0",

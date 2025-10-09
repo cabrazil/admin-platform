@@ -1,69 +1,169 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
-import { getSession } from '@auth0/nextjs-auth0'
-import { findOrCreateUser, checkBlogAccess } from '@/lib/auth-db'
+import { requireAuth } from '@/lib/api-auth'
+import type { AuthenticatedUser } from '@/lib/api-auth'
 
 const prisma = new PrismaClient()
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+// GET /api/blogs/[id]/authors - Listar autores do blog
+async function handleGet(request: NextRequest, user: AuthenticatedUser, context: { params: Promise<{ id: string }> }) {
   try {
-    const session = await getSession(request, new NextResponse())
-    
-    if (!session?.user) {
-      return NextResponse.json(
-        { success: false, error: 'Não autenticado' },
-        { status: 401 }
-      )
-    }
-
-    const { id } = await params
+    const { id } = await context.params
     const blogId = parseInt(id)
+
     if (isNaN(blogId)) {
-      return NextResponse.json(
-        { success: false, error: 'ID do blog inválido' },
-        { status: 400 }
-      )
+      return NextResponse.json({
+        success: false,
+        error: 'ID do blog inválido'
+      }, { status: 400 })
     }
 
-    // Buscar usuário no banco
-    const user = await findOrCreateUser({
-      email: session.user.email!,
-      name: session.user.name,
-      sub: session.user.sub!
+    // Verificar se o usuário tem acesso ao blog
+    const blog = await prisma.blog.findFirst({
+      where: {
+        id: blogId,
+        ownerId: user.id
+      }
     })
 
-    // Verificar acesso ao blog
-    const access = await checkBlogAccess(user.id, blogId)
-    if (!access.hasAccess) {
-      return NextResponse.json(
-        { success: false, error: 'Sem permissão para acessar este blog' },
-        { status: 403 }
-      )
+    if (!blog) {
+      return NextResponse.json({
+        success: false,
+        error: 'Blog não encontrado ou sem permissão'
+      }, { status: 404 })
     }
 
     // Buscar autores do blog
     const authors = await prisma.author.findMany({
-      where: { 
-        blogId
+      where: {
+        blogId: blogId
       },
-      orderBy: { name: 'asc' },
+      orderBy: {
+        name: 'asc'
+      }
     })
 
     return NextResponse.json({
       success: true,
-      data: {
-        authors
-      }
+      data: authors
     })
 
   } catch (error) {
-    console.error('Erro ao buscar autores do blog:', error)
-    return NextResponse.json(
-      { success: false, error: 'Erro interno do servidor' },
-      { status: 500 }
-    )
+    console.error('Erro ao buscar autores:', error)
+    return NextResponse.json({
+      success: false,
+      error: 'Erro interno do servidor'
+    }, { status: 500 })
   }
+}
+
+// POST /api/blogs/[id]/authors - Criar novo autor
+async function handlePost(request: NextRequest, user: AuthenticatedUser, context: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await context.params
+    const blogId = parseInt(id)
+
+    if (isNaN(blogId)) {
+      return NextResponse.json({
+        success: false,
+        error: 'ID do blog inválido'
+      }, { status: 400 })
+    }
+
+    // Verificar se o usuário tem acesso ao blog
+    const blog = await prisma.blog.findFirst({
+      where: {
+        id: blogId,
+        ownerId: user.id
+      }
+    })
+
+    if (!blog) {
+      return NextResponse.json({
+        success: false,
+        error: 'Blog não encontrado ou sem permissão'
+      }, { status: 404 })
+    }
+
+    const body = await request.json()
+    const { 
+      name, 
+      role, 
+      imageUrl, 
+      bio, 
+      email, 
+      website, 
+      social, 
+      skills, 
+      aiModel, 
+      isAi, 
+      signature 
+    } = body
+
+    // Validações
+    if (!name || !role || !imageUrl) {
+      return NextResponse.json({
+        success: false,
+        error: 'Nome, função e URL da foto são obrigatórios'
+      }, { status: 400 })
+    }
+
+    // Verificar se o email já existe (se fornecido)
+    if (email) {
+      const existingAuthor = await prisma.author.findFirst({
+        where: {
+          email: email
+        }
+      })
+
+      if (existingAuthor) {
+        return NextResponse.json({
+          success: false,
+          error: 'Já existe um autor com este email'
+        }, { status: 400 })
+      }
+    }
+
+    // Criar autor
+    const author = await prisma.author.create({
+      data: {
+        name,
+        role,
+        imageUrl,
+        bio: bio || null,
+        email: email || null,
+        website: website || null,
+        social: social || null,
+        skills: skills || null,
+        aiModel: aiModel || null,
+        isAi: isAi || false,
+        signature: signature || null,
+        blogId: blogId
+      }
+    })
+
+    return NextResponse.json({
+      success: true,
+      data: author
+    }, { status: 201 })
+
+  } catch (error) {
+    console.error('Erro ao criar autor:', error)
+    return NextResponse.json({
+      success: false,
+      error: 'Erro interno do servidor'
+    }, { status: 500 })
+  }
+}
+
+export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  return requireAuth(async (req: NextRequest, user: AuthenticatedUser) => {
+    return handleGet(req, user, context)
+  })(request)
+}
+
+export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  return requireAuth(async (req: NextRequest, user: AuthenticatedUser) => {
+    return handlePost(req, user, context)
+  })(request)
 }

@@ -8,6 +8,11 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+enum ArticleType {
+  analise
+  lista
+}
+
 // Modelo para representar cada Blog
 model Blog {
   id               Int      @id @default(autoincrement())
@@ -62,6 +67,7 @@ model Article {
   aiGenerated   Boolean  @default(false)
   aiModel       String?
   aiPrompt      String?
+  type          ArticleType @default(analise)
 
   // Relação com Blog
   blogId        Int
@@ -82,6 +88,7 @@ model Article {
   @@index([date])
   @@index([aiGenerated])
   @@index([blogId])
+  @@index([type])
 }
 
 model Author {

@@ -16,7 +16,10 @@ import {
   Edit,
   Trash2,
   ExternalLink,
-  MoreVertical
+  MoreVertical,
+  Palette,
+  Tag,
+  User
 } from 'lucide-react'
 
 interface Blog {
@@ -267,26 +270,50 @@ function BlogsPageContent() {
                 {/* Ações */}
                 <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-lg">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Link
-                        href={`/blogs/${blog.id}/articles`}
-                        className="text-blue-600 hover:text-blue-900 text-sm font-medium"
-                      >
-                        Ver Artigos
-                      </Link>
-                      <span className="text-gray-300">•</span>
-                      <Link
-                        href={`/blogs/${blog.id}/prompts`}
-                        className="text-purple-600 hover:text-purple-900 text-sm font-medium"
-                      >
-                        Ver Prompts
-                      </Link>
-                      <Link
-                        href={`/blogs/${blog.id}/edit`}
-                        className="text-blue-600 hover:text-blue-900 text-sm font-medium"
-                      >
-                        Editar
-                      </Link>
+                    <div className="flex flex-col space-y-2">
+                      {/* Primeira linha: Artigos • Prompts • Layouts/SEO */}
+                      <div className="flex items-center space-x-2">
+                        <Link
+                          href={`/blogs/${blog.id}/articles`}
+                          className="text-blue-600 hover:text-blue-900 text-sm font-medium"
+                        >
+                          Artigos
+                        </Link>
+                        <span className="text-gray-300">•</span>
+                        <Link
+                          href={`/blogs/${blog.id}/prompts`}
+                          className="text-purple-600 hover:text-purple-900 text-sm font-medium"
+                        >
+                          Prompts
+                        </Link>
+                        <span className="text-gray-300">•</span>
+                        <Link
+                          href={`/layouts-seo?blogId=${blog.id}`}
+                          className="text-green-600 hover:text-green-900 text-sm font-medium flex items-center"
+                        >
+                          <Palette className="h-3 w-3 mr-1" />
+                          Layouts/SEO
+                        </Link>
+                      </div>
+                      
+                      {/* Segunda linha: Categorias • Autores */}
+                      <div className="flex items-center space-x-2">
+                        <Link
+                          href={`/categories?blogId=${blog.id}`}
+                          className="text-purple-600 hover:text-purple-900 text-sm font-medium flex items-center"
+                        >
+                          <Tag className="h-3 w-3 mr-1" />
+                          Categorias
+                        </Link>
+                        <span className="text-gray-300">•</span>
+                        <Link
+                          href={`/authors?blogId=${blog.id}`}
+                          className="text-orange-600 hover:text-orange-900 text-sm font-medium flex items-center"
+                        >
+                          <User className="h-3 w-3 mr-1" />
+                          Autores
+                        </Link>
+                      </div>
                     </div>
                     
                     <div className="flex items-center space-x-2">

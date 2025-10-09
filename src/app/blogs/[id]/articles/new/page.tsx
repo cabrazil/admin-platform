@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import AuthWrapper from '@/components/AuthWrapper'
+import { LoadingSelect } from '@/components/LoadingSelect'
 import { useAuth } from '@/hooks/useAuth'
 import { 
   ArrowLeft,
@@ -94,7 +95,7 @@ function NewArticlePageContent() {
         throw new Error('Erro ao carregar categorias')
       }
       const categoriesData = await categoriesResponse.json()
-      setCategories(categoriesData.data.categories)
+      setCategories(categoriesData.data || [])
       
       // Buscar autores do blog
       const authorsResponse = await fetch(`/api/blogs/${blogId}/authors`)
@@ -102,7 +103,7 @@ function NewArticlePageContent() {
         throw new Error('Erro ao carregar autores')
       }
       const authorsData = await authorsResponse.json()
-      setAuthors(authorsData.data.authors)
+      setAuthors(authorsData.data || [])
       
     } catch (err) {
       console.error('❌ Erro ao carregar dados:', err)
@@ -680,21 +681,29 @@ function NewArticlePageContent() {
                   <Tag className="h-4 w-4 inline mr-1" />
                   Categoria *
                 </label>
-                <select
-                  id="category"
-                  name="category"
-                  value={selectedCategory}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  required
+                <LoadingSelect 
+                  isLoading={loading && categories.length === 0}
+                  loadingText="Carregando categorias..."
+                  className="w-full"
                 >
-                  <option value="">Selecione uma categoria</option>
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.title}
-                    </option>
-                  ))}
-                </select>
+                  <select
+                    id="category"
+                    name="category"
+                    value={selectedCategory}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  >
+                    <option value="">Selecione uma categoria</option>
+                    {categories && categories.length > 0 ? categories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.title}
+                      </option>
+                    )) : (
+                      <option value="" disabled>Nenhuma categoria encontrada</option>
+                    )}
+                  </select>
+                </LoadingSelect>
               </div>
 
               {/* Autor */}
@@ -703,39 +712,53 @@ function NewArticlePageContent() {
                   <User className="h-4 w-4 inline mr-1" />
                   Autor *
                 </label>
-                <select
-                  id="author"
-                  name="author"
-                  value={selectedAuthor}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  required
+                <LoadingSelect 
+                  isLoading={loading && authors.length === 0}
+                  loadingText="Carregando autores..."
+                  className="w-full"
                 >
-                  <option value="">Selecione um autor</option>
-                  {authors.map((author) => (
-                    <option key={author.id} value={author.id}>
-                      {author.name}
-                    </option>
-                  ))}
-                </select>
+                  <select
+                    id="author"
+                    name="author"
+                    value={selectedAuthor}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  >
+                    <option value="">Selecione um autor</option>
+                    {authors && authors.length > 0 ? authors.map((author) => (
+                      <option key={author.id} value={author.id}>
+                        {author.name}
+                      </option>
+                    )) : (
+                      <option value="" disabled>Nenhum autor encontrado</option>
+                    )}
+                  </select>
+                </LoadingSelect>
               </div>
 
               {/* URL da Imagem */}
               <div>
                 <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-700 mb-2">
-                  URL da Imagem
+                  URL ou Caminho da Imagem
                 </label>
                 <input
-                  type="url"
+                  type="text"
                   id="imageUrl"
                   name="imageUrl"
                   value={imageUrl}
                   onChange={handleInputChange}
-                  placeholder="https://exemplo.com/imagem.jpg"
+                  placeholder="https://exemplo.com/imagem.jpg ou images/blog/articles/2025/imagem.jpg"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
                 <p className="mt-1 text-sm text-gray-500">
-                  URL da imagem principal do artigo (opcional).
+                  URL completa ou caminho local da imagem principal do artigo (opcional).
+                  <br />
+                  <strong>Exemplos:</strong>
+                  <br />
+                  • URL: <code className="text-xs bg-gray-100 px-1 rounded">https://exemplo.com/imagem.jpg</code>
+                  <br />
+                  • Local: <code className="text-xs bg-gray-100 px-1 rounded">images/blog/articles/2025/imagem.jpg</code>
                 </p>
               </div>
 

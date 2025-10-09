@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
+import { ImagePreview } from '@/components/ImagePreview'
 
 // Função para gerar slug (simplificada para frontend)
 function generateSlug(text: string): string {
@@ -116,10 +117,10 @@ export default function EditArticlePage() {
         
         // Carregar dados em paralelo
         const [articleRes, categoriesRes, authorsRes, tagsRes] = await Promise.all([
-          fetch(`/api/articles/${articleId}`),
-          fetch(`/api/blogs/${blogId}/categories`),
-          fetch(`/api/blogs/${blogId}/authors`),
-          fetch(`/api/blogs/${blogId}/tags`)
+          fetch(`/api/articles/${articleId}`, { credentials: 'include' }),
+          fetch(`/api/blogs/${blogId}/categories`, { credentials: 'include' }),
+          fetch(`/api/blogs/${blogId}/authors`, { credentials: 'include' }),
+          fetch(`/api/blogs/${blogId}/tags`, { credentials: 'include' })
         ])
 
         console.log('🔍 Status das respostas:', {
@@ -130,16 +131,31 @@ export default function EditArticlePage() {
         })
 
         if (!articleRes.ok) throw new Error(`Erro artigo: ${articleRes.status}`)
-        if (!categoriesRes.ok) throw new Error(`Erro categorias: ${categoriesRes.status}`)
-        if (!authorsRes.ok) throw new Error(`Erro autores: ${authorsRes.status}`)
-        if (!tagsRes.ok) throw new Error(`Erro tags: ${tagsRes.status}`)
+        
+        // Tratar erros de categorias e autores de forma mais suave
+        let categoriesData = { success: false, data: [] }
+        let authorsData = { success: false, data: [] }
+        let tagsData = []
+        
+        if (categoriesRes.ok) {
+          categoriesData = await categoriesRes.json()
+        } else {
+          console.warn('⚠️ Erro ao carregar categorias:', categoriesRes.status)
+        }
+        
+        if (authorsRes.ok) {
+          authorsData = await authorsRes.json()
+        } else {
+          console.warn('⚠️ Erro ao carregar autores:', authorsRes.status)
+        }
+        
+        if (tagsRes.ok) {
+          tagsData = await tagsRes.json()
+        } else {
+          console.warn('⚠️ Erro ao carregar tags:', tagsRes.status)
+        }
 
-        const [articleData, categoriesData, authorsData, tagsData] = await Promise.all([
-          articleRes.json(),
-          categoriesRes.json(),
-          authorsRes.json(),
-          tagsRes.json()
-        ])
+        const articleData = await articleRes.json()
 
         console.log('✅ Dados recebidos:', { articleData, categoriesData, authorsData, tagsData })
 
@@ -147,12 +163,12 @@ export default function EditArticlePage() {
           const article = articleData.data
           
           // Verificar se o autor do artigo pertence ao blog atual
-          const validAuthor = authorsData.data?.authors?.find((auth: Author) => auth.id === article.authorId)
+          const validAuthor = authorsData.data?.find((auth: Author) => auth.id === article.authorId)
           
-          if (!validAuthor && authorsData.data?.authors?.length > 0) {
+          if (!validAuthor && authorsData.data?.length > 0) {
             // Se o autor não for válido, usar o primeiro autor disponível
             console.log('⚠️ Autor do artigo não pertence ao blog, usando primeiro autor disponível')
-            article.authorId = authorsData.data.authors[0].id
+            article.authorId = authorsData.data[0].id
           }
           
           setArticle(article)
@@ -166,8 +182,8 @@ export default function EditArticlePage() {
           throw new Error('Artigo não encontrado nos dados')
         }
 
-        setCategories(categoriesData.data?.categories || [])
-        setAuthors(authorsData.data?.authors || [])
+        setCategories(categoriesData.data || [])
+        setAuthors(authorsData.data || [])
         setTags(tagsData || [])
         
         // Definir tags selecionadas do artigo
@@ -228,6 +244,7 @@ export default function EditArticlePage() {
       const response = await fetch(`/api/articles/${article.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(updateData),
       })
       
@@ -465,22 +482,33 @@ export default function EditArticlePage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Categoria ({categories.length} disponíveis)
                 </label>
-                <select
-                  value={article.categoryId}
-                  onChange={(e) => setArticle({ ...article, categoryId: parseInt(e.target.value) })}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                    categories.find(cat => cat.id === article.categoryId) 
-                      ? 'border-green-500' 
-                      : 'border-red-500'
-                  }`}
-                >
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.title}
-                    </option>
-                  ))}
-                </select>
-                {!categories.find(cat => cat.id === article.categoryId) && (
+                {categories.length === 0 ? (
+                  <div className="w-full px-3 py-2 border border-yellow-300 rounded-lg bg-yellow-50">
+                    <p className="text-yellow-700 text-sm">
+                      ⚠️ Nenhuma categoria encontrada. 
+                      <a href={`/categories?blogId=${blogId}`} className="text-blue-600 hover:underline ml-1">
+                        Criar categorias
+                      </a>
+                    </p>
+                  </div>
+                ) : (
+                  <select
+                    value={article.categoryId}
+                    onChange={(e) => setArticle({ ...article, categoryId: parseInt(e.target.value) })}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                      categories.find(cat => cat.id === article.categoryId) 
+                        ? 'border-green-500' 
+                        : 'border-red-500'
+                    }`}
+                  >
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.title}
+                      </option>
+                    ))}
+                  </select>
+                )}
+                {categories.length > 0 && !categories.find(cat => cat.id === article.categoryId) && (
                   <p className="text-red-500 text-sm mt-1">
                     ⚠️ Categoria não pertence a este blog
                   </p>
@@ -491,22 +519,33 @@ export default function EditArticlePage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Autor ({authors.length} disponíveis)
                 </label>
-                <select
-                  value={article.authorId}
-                  onChange={(e) => setArticle({ ...article, authorId: parseInt(e.target.value) })}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                    authors.find(auth => auth.id === article.authorId) 
-                      ? 'border-green-500' 
-                      : 'border-red-500'
-                  }`}
-                >
-                  {authors.map((author) => (
-                    <option key={author.id} value={author.id}>
-                      {author.name}
-                    </option>
-                  ))}
-                </select>
-                {!authors.find(auth => auth.id === article.authorId) && (
+                {authors.length === 0 ? (
+                  <div className="w-full px-3 py-2 border border-yellow-300 rounded-lg bg-yellow-50">
+                    <p className="text-yellow-700 text-sm">
+                      ⚠️ Nenhum autor encontrado. 
+                      <a href={`/authors?blogId=${blogId}`} className="text-blue-600 hover:underline ml-1">
+                        Criar autores
+                      </a>
+                    </p>
+                  </div>
+                ) : (
+                  <select
+                    value={article.authorId}
+                    onChange={(e) => setArticle({ ...article, authorId: parseInt(e.target.value) })}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                      authors.find(auth => auth.id === article.authorId) 
+                        ? 'border-green-500' 
+                        : 'border-red-500'
+                    }`}
+                  >
+                    {authors.map((author) => (
+                      <option key={author.id} value={author.id}>
+                        {author.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+                {authors.length > 0 && !authors.find(auth => auth.id === article.authorId) && (
                   <p className="text-red-500 text-sm mt-1">
                     ⚠️ Autor não pertence a este blog
                   </p>
@@ -575,13 +614,12 @@ export default function EditArticlePage() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Preview da Imagem
                   </label>
-                  <img
-                    src={article.imageUrl}
-                    alt="Preview"
+                  <ImagePreview
+                    imageUrl={article.imageUrl}
+                    alt="Preview da imagem do artigo"
                     className="w-full h-32 object-cover rounded border"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none'
-                    }}
+                    showDebugInfo={true}
+                    blogId={parseInt(blogId)}
                   />
                 </div>
               )}
