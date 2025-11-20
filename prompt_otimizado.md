@@ -2,7 +2,9 @@
 
 ## Instruções Gerais
 
-Crie um artigo de blog envolvente e autêntico para o blog "Vibesfilm" (vibesfilm.com), baseado no material de curadoria de filme fornecido. O objetivo é compartilhar informações com entusiastas de filmes e cinema, escrevendo de forma humanizada e acessível para um público que vai do jovem ao maduro, utilizando uma linguagem que transita de forma equilibrada com o uso das palavras "vibe", "emoção" e "sentimento".
+Crie um artigo de blog envolvente e autêntico para o blog "Vibesfilm" (vibesfilm.com), baseado no material de curadoria de filme fornecido. O objetivo é compartilhar informações com entusiastas  e cinéfilos, escrevendo de forma humanizada e acessível para um público que vai do jovem ao maduro, utilizando uma linguagem que transita de forma equilibrada com o uso das palavras "vibe", "emoção" e "sentimento".
+
+O Material de curadoria deve ser usado como base para desenvolver o artigo seguindo as regras descritas abaixo.
 
 ## Estrutura HTML Obrigatória
 
@@ -13,17 +15,30 @@ Crie um artigo de blog envolvente e autêntico para o blog "Vibesfilm" (vibesfil
 
 <p>[Introdução - 2-3 parágrafos]</p>
 
-<h2>O Que Torna "[NOME_DO_FILME]" Tão Impactante?</h2>
+<h2>O Que Torna "[NOME_DO_FILME]" Tão Impactante? ou Tão Especial ou Tão Diferente</h2>
 <p>[Conteúdo da seção 1 - 3-4 parágrafos]</p>
 
 <h2>A Vibe Dominante: [PRINCIPAL_SENTIMENTO] e [SUBSENTIMENTO]</h2>
-<p>[Conteúdo da seção 2 - 2-3 parágrafos]</p>
+<p> Desenvolver um parágrafo para abrir a seção</p>
+<h3> Tags Emocionais Chave que definem esta experiência são:</h3>
+<ul>
+  <li> [SUBSENTIMENTO1]: Desenvolver um parágrafo com 3-4 linhas </li>
+  <li> [SUBSENTIMENTO2]: Desenvolver um parágrafo com 3-4 linhas </li>
+  <li> [SUBSENTIMENTO3]: Desenvolver um parágrafo com 3-4 linhas </li>
+</ul>
 
 <h2>Quando Escolher "[NOME_DO_FILME]" (Sua Jornada Emocional no Vibesfilm)</h2>
-<p>[Conteúdo da seção 3 - 3-4 parágrafos]</p>
+<p>Desenvolver um parágrafo para abrir a seção</p>
+<ul>
+  <li> Abrir com "Para quem busca [relacione com SUBSENTIMENTO1]" desenvolver parágrafo com 3-4 linhas </li>
+  <li> Abrir com "Para quem busca [relacione com SUBSENTIMENTO2]" desenvolver parágrafo com 3-4 linhas </li>
+  <li> Abrir com "Para quem busca [relacione com SUBSENTIMENTO3]" desenvolver parágrafo com 3-4 linhas </li>
+</ul>
 
-<h2>Conclusão e Chamada para Ação</h2>
+<h2>Sua Vibe Encontra o Filme Certo no Vibesfilm</h2>
 <p>[Conteúdo da conclusão - 1-2 parágrafos]</p>
+<p> Quer saber onde assistir, ver o elenco completo e mais detalhes? Confira nosso guia completo de "título-do-filme".</p>
+<p> No Vibesfilm, nossa curadoria é honesta sobre a natureza desafiadora de filmes como este, guiando você para experiências que realmente ressoam com sua emoção. Qual é a sua vibe hoje? Descubra seu filme perfeito no Vibesfilm App!</p>
 ```
 
 ## Formatação HTML Específica
@@ -50,12 +65,12 @@ Os 12 Macacos (1995): Uma Viagem ao Labirinto da Mente – Sua Vibe É de Misté
 ```
 
 ### 2. Introdução (2-3 parágrafos)
-- Contextualize o filme e o conceito do Vibesfilm
-- Use a "vibe" dominante para engajar o leitor
+- Faça uma Análise cinéfila (Aprofundada) do filme, gênero e estilo, trama central e temas pincipais
+- Use a "vibe" dominante do filme para engajar o leitor
 - Inclua convite sutil para continuar a leitura
 - Mencione que o Vibesfilm vai além do gênero, focando na experiência emocional
 
-### 3. Seção 1: "O Que Torna [FILME] Tão Impactante?" (H2)
+### 3. Seção 1: "O Que Torna [FILME] Tão Impactante? ou Tão interessante, ou especial" (H2)
 **Conteúdo (3-4 parágrafos):**
 - Gênero e estilo do diretor
 - Trama central (sem spoilers excessivos)
@@ -78,13 +93,13 @@ Os 12 Macacos (1995): Uma Viagem ao Labirinto da Mente – Sua Vibe É de Misté
   - Descreva o "caminho" emocional
   - Explique COMO o filme cumpre essa jornada
   - Benefício para o espectador
-- **Use mix equilibrado de "vibe", "emoção" e "sentimento"**
+- **Use mix equilibrado das palavras "vibe", "emoção" e "sentimento"**
 
 ### 6. Conclusão e Chamada para Ação (H2)
 **Conteúdo (1-2 parágrafos):**
 - Resuma o impacto emocional do filme
 - Reafirme a proposta única do Vibesfilm
-- **CTA obrigatória:** "Qual é a sua [vibe/emoção] hoje? Descubra seu filme perfeito no Vibesfilm App!"
+- **CTA obrigatória:** Quer saber onde assistir, ver o elenco completo e mais detalhes? Confira nosso guia completo de "título-do-filme
 
 ## Tom e Linguagem
 
@@ -93,48 +108,30 @@ Os 12 Macacos (1995): Uma Viagem ao Labirinto da Mente – Sua Vibe É de Misté
 - **Empático:** Conecte à experiência pessoal do leitor
 - **Equilíbrio:** "vibe" para branding/sensação geral, "emoção"/"sentimento" para estados específicos
 
-## Material de Curadoria
+**Instrução:** Use o Material de curadoria do filme Corra! (2017) abaixo.
 
-"Os 12 Macacos" é um clássico cult, uma obra de ficção científica distópica que é a cara de seu diretor, Terry Gilliam: caótica, visualmente inventiva, melancólica e profundamente pessimista. Curá-lo é um exercício de entender um filme que é, ao mesmo tempo, um thriller de viagem no tempo, um estudo sobre loucura e um drama trágico.
+**Exemplo1: ** Análise Conceitual e Semântica
 
-### Análise Cinéfila do Filme
+  Conceito Central: O filme utiliza o gênero de terror/suspense para expor a insidiosa natureza do racismo liberal moderno e a apropriação cultural. A premissa de um encontro familiar inocente rapidamente se transforma em uma conspiração aterrorizante.
 
-**Gênero e Estilo:** É um thriller de ficção científica neo-noir e um drama psicológico. O estilo de Terry Gilliam é sujo, distorcido e claustrofóbico. Ele usa lentes grande-angulares e ângulos de câmera holandeses (inclinados) para criar uma sensação constante de desorientação e paranoia, colocando o espectador diretamente na mente confusa do protagonista. O futuro é retratado como um pesadelo subterrâneo e improvisado, e o presente é igualmente caótico e insano.
+  Temas Semânticos: Paranoia, desconfiança, controle social, alienação, racismo, privilégio branco, trauma e o medo de ser "visto" (ou alvo).
 
-**Trama Central:** Em um futuro pós-apocalíptico (2035), a humanidade vive no subsolo depois que um vírus mortal dizimou a população mundial em 1996. James Cole (Bruce Willis), um prisioneiro, é "voluntariado" para viajar de volta no tempo para coletar informações sobre o vírus original, que se acredita ter sido liberado por um grupo terrorista conhecido como o "Exército dos 12 Macacos". Sua jornada no tempo é imprecisa e traumática, fazendo-o questionar sua própria sanidade enquanto tenta desvendar o mistério com a ajuda de uma psiquiatra, a Dra. Kathryn Railly (Madeleine Stowe), e cruzando o caminho do maníaco e imprevisível Jeffrey Goines (Brad Pitt).
+  Tom: Extremamente tenso, psicologicamente perturbador e cheio de suspense crescente. A experiência do usuário é a de sentir a ansiedade e a inquietação de Chris, o protagonista.
 
-**Temas Principais:** O filme é uma exploração sombria sobre destino, fatalismo e a natureza da memória e da realidade. É sobre a impossibilidade de mudar o passado ("o que já foi feito, está feito"). Aborda temas como loucura, paranoia e a tênue linha que separa a sanidade da insanidade. O tema central é a tragédia de um homem preso em um loop temporal, assombrado por uma memória de infância que ele não compreende, correndo em direção a um destino que ele não pode evitar.
 
-### Conectando o Filme ao Modelo de Curadoria
+**Exemplo2: ** Identificação das Tags Emocionais e Sentimentos
+  O sentimento que o filme mais intensamente evoca e representa é o de Ansiedade e Tensão.
 
-**Vibe Dominante:** Ansioso(a) - Esta é, inequivocamente, a lente mais precisa e dominante. A experiência de assistir ao filme é a de estar perdido em um labirinto mental junto com James Cole. A narrativa fragmentada, a paranoia constante, a dúvida sobre o que é real e o que é delírio, e a sensação de um desastre iminente criam uma atmosfera de ansiedade e confusão avassaladoras. O estilo visual de Gilliam é projetado para gerar desconforto e tensão.
+**Exemplo3: ** Sentimentos Identificados 
+  Suspense Crescente
+  Explicação IA: O filme 'Corra!' habilmente constrói um suspense crescente à medida que o protagonista, Chris, descobre a verdade sinistra por trás da fachada acolhedora dos pais de sua namorada. Esse aumento de tensão é central para a jornada de jogar com a percepção do espectador e surpreendê-lo com reviravoltas inesperadas.
 
-**Tags Emocionais Chave:**
-- Complexidade Psicológica: A definição do filme
-- Desintegração Psicológica: O filme questiona constantemente a sanidade de Cole
-- Suspense Crescente: O mistério sobre o vírus e o Exército dos 12 Macacos
-- Desespero Crescente: O sentimento que define a jornada de Cole ao perceber que não pode mudar nada
+  Desintegração Psicológica
+  Explicação IA: À medida que Chris se depara com a realidade perturbadora da família de sua namorada, ele experimenta uma desintegração psicológica, que é essencial para a reviravolta do enredo e a manipulação da percepção do espectador, tornando o filme uma jornada emocional intensa.
 
-### Mapeando Múltiplas Jornadas Válidas
+  Desespero Crescente
+  Explicação IA: À medida que o enredo se desenrola, Chris experimenta um crescente desespero ao perceber a gravidade e a ameaça da situação em que se encontra, intensificando o suspense e o impacto emocional do filme.
 
-**Jornada 1: O Mergulho na Complexidade (Curadoria Principal)**
-Esta é a curadoria mais precisa para o público-alvo do filme. Espectadores de "Os 12 Macacos" buscam um desafio intelectual. Para quem quer Manter sua ansiedade com uma imersão total, o filme oferece um "mundo complexo" e "ideias que desafiam a mente" (fatalismo, viagem no tempo, sanidade). É a recomendação perfeita para o fã de ficção científica inteligente e cerebral.
-
-**Jornada 2: O Quebra-Cabeça Mental**
-Esta jornada foca no aspecto de "thriller de mistério" do filme. A narrativa é um quebra-cabeça que "joga com a percepção" do espectador, que, junto com a Dra. Railly, tenta entender se Cole é um viajante do tempo ou um louco. O filme está cheio de pistas falsas e culmina em uma "reviravolta inesperada" e trágica que recontextualiza toda a história.
-
-**Jornada 3: A Ficção Científica Desafiadora**
-Esta é uma curadoria para o fã de ficção científica que busca algo além de naves e lasers. Para o espectador que parte de um sentimento Animado(a) pela ficção científica, o filme Transforma essa energia em uma experiência mais profunda e filosófica. Ele "desafia a mente" com seus paradoxos temporais e "expande a realidade" ao questionar a natureza da memória e do destino.
-
-### Resumo da Curadoria
-
-Identificamos três jornadas muito fortes, cada uma apelando para um tipo diferente de espectador que aprecia cinema complexo:
-
-1. **Principal:** A mais intelectual, para quem busca uma ficção científica cerebral e desafiadora
-2. **Secundária Forte:** A mais focada no mistério, para quem gosta de filmes que brincam com a percepção
-3. **Secundária de Gênero:** A mais ampla, para o fã de ficção científica que busca uma história que o faça pensar
-
-Ter "Os 12 Macacos" associado a essas três jornadas no VibesFilm mostra que o aplicativo é capaz de curar clássicos cult, entendendo que seu apelo está no desafio intelectual e na complexidade psicológica, e não no conforto emocional.
 
 ## Instruções Finais
 
@@ -145,3 +142,7 @@ Ter "Os 12 Macacos" associado a essas três jornadas no VibesFilm mostra que o a
 5. **Destaque com <strong>** as tags emocionais chave
 6. **Use parágrafos curtos** para facilitar a leitura
 7. **Garanta que o HTML seja válido** e bem formatado
+8. **Ao final, baseado na análise do filme, gerar**
+Excerpt (resumo para introdução e SEO interno do Blog)
+Título SEO (máx. 60 caracteres)
+Meta Description (máx. 160 caracteres)

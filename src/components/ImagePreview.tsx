@@ -51,10 +51,25 @@ export function ImagePreview({
             <div><strong>Caminho original:</strong> {imageUrl}</div>
             <div><strong>URL processada:</strong> {processedUrl}</div>
             <div><strong>Base Path:</strong> {debugInfo.blogConfig.basePath}</div>
+            {debugInfo.externalAssetsPath && (
+              <div><strong>External Assets Path:</strong> {debugInfo.externalAssetsPath}</div>
+            )}
+            {debugInfo.isExternalAsset && debugInfo.fullPath && (
+              <div><strong>Caminho absoluto completo:</strong> {debugInfo.fullPath}</div>
+            )}
             <div><strong>Blog Externo:</strong> {debugInfo.isExternalBlog ? 'Sim' : 'Não'}</div>
+            {debugInfo.isExternalAsset && (
+              <div><strong>Tipo:</strong> Asset externo (servido via API)</div>
+            )}
             <div className="mt-2 text-red-500">
               <strong>Possíveis soluções:</strong>
               <br />• {debugInfo.isExternalBlog ? 'Copie a imagem do projeto externo' : 'Verifique se o arquivo existe no projeto'}
+              {debugInfo.isExternalAsset && (
+                <>
+                  <br />• Verifique se o arquivo existe em: {debugInfo.fullPath}
+                  <br />• Verifique se a rota de API está funcionando: {processedUrl}
+                </>
+              )}
               <br />• Use uma URL externa permitida: {debugInfo.blogConfig.allowedExternalDomains.join(', ')}
               <br />• Verifique as permissões de acesso ao diretório
             </div>
@@ -88,6 +103,9 @@ export function ImagePreview({
           <div><strong>Blog:</strong> {debugInfo.blogConfig.blogName}</div>
           <div><strong>Caminho original:</strong> {imageUrl}</div>
           <div><strong>URL processada:</strong> {processedUrl}</div>
+          {debugInfo.isExternalAsset && debugInfo.fullPath && (
+            <div><strong>Caminho absoluto:</strong> {debugInfo.fullPath}</div>
+          )}
           <div><strong>Domínios permitidos:</strong> {debugInfo.blogConfig.allowedExternalDomains.join(', ')}</div>
         </div>
       )}

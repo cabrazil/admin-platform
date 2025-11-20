@@ -74,13 +74,18 @@ export default function AdminEditPage() {
               if (articleData.success && articleData.data) {
           const article = articleData.data
           
-          // Verificar se o autor do artigo pertence ao blog atual
-          const validAuthor = authorsData.data?.find(auth => auth.id === article.authorId)
+          // Extrair array de autores da estrutura de resposta
+          const authorsArray = authorsData.data?.authors || authorsData.data || []
           
-          if (!validAuthor && authorsData.data?.length > 0) {
+          // Verificar se o autor do artigo pertence ao blog atual
+          const validAuthor = Array.isArray(authorsArray) 
+            ? authorsArray.find(auth => auth.id === article.authorId)
+            : null
+          
+          if (!validAuthor && Array.isArray(authorsArray) && authorsArray.length > 0) {
             // Se o autor não for válido, usar o primeiro autor disponível
             console.log('⚠️ Autor do artigo não pertence ao blog, usando primeiro autor disponível')
-            article.authorId = authorsData.data[0].id
+            article.authorId = authorsArray[0].id
           }
           
           setArticle(article)
@@ -88,8 +93,8 @@ export default function AdminEditPage() {
           throw new Error('Artigo não encontrado nos dados')
         }
 
-        setCategories(categoriesData.data || [])
-        setAuthors(authorsData.data || [])
+        setCategories(categoriesData.data?.categories || categoriesData.data || [])
+        setAuthors(authorsData.data?.authors || authorsData.data || [])
 
     } catch (err) {
       console.error('❌ Erro ao carregar:', err)

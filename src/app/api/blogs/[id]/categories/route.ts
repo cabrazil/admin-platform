@@ -1,14 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
-import { requireAuth } from '@/lib/api-auth'
-import type { AuthenticatedUser } from '@/lib/api-auth'
+import { getSession } from '@auth0/nextjs-auth0'
+import { findOrCreateUser, checkBlogAccess } from '@/lib/auth-db'
 
 const prisma = new PrismaClient()
 
 // GET /api/blogs/[id]/categories - Listar categorias do blog
-async function handleGet(request: NextRequest, user: AuthenticatedUser, context: { params: Promise<{ id: string }> }) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const { id } = await context.params
+    const session = await getSession(request, new NextResponse())
+    
+    if (!session?.user) {
+      return NextResponse.json(
+        { success: false, error: 'Não autenticado' },
+        { status: 401 }
+      )
+    }
+
+    const { id } = await params
     const blogId = parseInt(id)
 
     if (isNaN(blogId)) {
@@ -18,19 +30,20 @@ async function handleGet(request: NextRequest, user: AuthenticatedUser, context:
       }, { status: 400 })
     }
 
-    // Verificar se o usuário tem acesso ao blog
-    const blog = await prisma.blog.findFirst({
-      where: {
-        id: blogId,
-        ownerId: user.id
-      }
+    // Buscar usuário no banco
+    const user = await findOrCreateUser({
+      email: session.user.email!,
+      name: session.user.name,
+      sub: session.user.sub!
     })
 
-    if (!blog) {
-      return NextResponse.json({
-        success: false,
-        error: 'Blog não encontrado ou sem permissão'
-      }, { status: 404 })
+    // Verificar acesso ao blog
+    const access = await checkBlogAccess(user.id, blogId)
+    if (!access.hasAccess) {
+      return NextResponse.json(
+        { success: false, error: 'Sem permissão para acessar este blog' },
+        { status: 403 }
+      )
     }
 
     // Buscar categorias do blog
@@ -45,7 +58,9 @@ async function handleGet(request: NextRequest, user: AuthenticatedUser, context:
 
     return NextResponse.json({
       success: true,
-      data: categories
+      data: {
+        categories
+      }
     })
 
   } catch (error) {
@@ -58,9 +73,21 @@ async function handleGet(request: NextRequest, user: AuthenticatedUser, context:
 }
 
 // POST /api/blogs/[id]/categories - Criar nova categoria
-async function handlePost(request: NextRequest, user: AuthenticatedUser, context: { params: Promise<{ id: string }> }) {
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const { id } = await context.params
+    const session = await getSession(request, new NextResponse())
+    
+    if (!session?.user) {
+      return NextResponse.json(
+        { success: false, error: 'Não autenticado' },
+        { status: 401 }
+      )
+    }
+
+    const { id } = await params
     const blogId = parseInt(id)
 
     if (isNaN(blogId)) {
@@ -70,19 +97,20 @@ async function handlePost(request: NextRequest, user: AuthenticatedUser, context
       }, { status: 400 })
     }
 
-    // Verificar se o usuário tem acesso ao blog
-    const blog = await prisma.blog.findFirst({
-      where: {
-        id: blogId,
-        ownerId: user.id
-      }
+    // Buscar usuário no banco
+    const user = await findOrCreateUser({
+      email: session.user.email!,
+      name: session.user.name,
+      sub: session.user.sub!
     })
 
-    if (!blog) {
-      return NextResponse.json({
-        success: false,
-        error: 'Blog não encontrado ou sem permissão'
-      }, { status: 404 })
+    // Verificar acesso ao blog
+    const access = await checkBlogAccess(user.id, blogId)
+    if (!access.hasAccess) {
+      return NextResponse.json(
+        { success: false, error: 'Sem permissão para criar categorias neste blog' },
+        { status: 403 }
+      )
     }
 
     const body = await request.json()
@@ -137,16 +165,4 @@ async function handlePost(request: NextRequest, user: AuthenticatedUser, context
       error: 'Erro interno do servidor'
     }, { status: 500 })
   }
-}
-
-export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
-  return requireAuth(async (req: NextRequest, user: AuthenticatedUser) => {
-    return handleGet(req, user, context)
-  })(request)
-}
-
-export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
-  return requireAuth(async (req: NextRequest, user: AuthenticatedUser) => {
-    return handlePost(req, user, context)
-  })(request)
 }

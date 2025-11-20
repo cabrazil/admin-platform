@@ -10,6 +10,7 @@ export interface BlogImageConfig {
   isExternal: boolean
   allowedExternalDomains: string[]
   maxImageSize: string
+  externalAssetsPath?: string // Caminho absoluto para assets externos (ex: para blog 3)
 }
 
 // Configuração dos blogs baseada nos dados reais do banco
@@ -41,7 +42,8 @@ export const BLOG_IMAGE_CONFIGS: Record<number, BlogImageConfig> = {
     basePath: '/home/cabrazil/newprojs/blogs/blog-admin-platform/public/vibesfilm/images',
     isExternal: false, // Imagens copiadas para o projeto admin
     allowedExternalDomains: ['unsplash.com', 'tmdb.org', 'themoviedb.org', 'pexels.com'],
-    maxImageSize: '10MB'
+    maxImageSize: '10MB',
+    externalAssetsPath: '/home/cabrazil/newprojs/fav_movies/moviesf_front/src/assets' // Caminho para assets externos (caminhos blog/...)
   },
   
   // CicloePonto Blog (ID: 4)
@@ -82,13 +84,46 @@ export class BlogImageManager {
       return this.validateExternalUrl(imageUrl)
     }
 
-    // Se é um caminho local, processa baseado na configuração do blog
-    if (imageUrl.startsWith('images/') || imageUrl.startsWith('/images/')) {
-      const cleanPath = imageUrl.startsWith('/') ? imageUrl.slice(1) : imageUrl
+    // Remove barra inicial se existir para normalizar
+    const cleanPath = imageUrl.startsWith('/') ? imageUrl.slice(1) : imageUrl
+
+    // Para BlogId 3 (VibesFilm), caminhos que começam com "blog/" são servidos do diretório externo
+    if (this.blogConfig.blogId === 3) {
+      // Se começa com "blog/", verifica se já tem ano/mês ou precisa adicionar
+      if (cleanPath.startsWith('blog/')) {
+        // Se já tem estrutura completa (blog/articles/2025/mês/arquivo), usa como está
+        if (cleanPath.match(/^blog\/articles\/\d{4}\/[^\/]+\//)) {
+          return `/api/blogs/${this.blogConfig.blogId}/images/${encodeURIComponent(cleanPath)}`
+        }
+        
+        // Se é blog/articles/nome.jpg, adiciona ano/mês atual
+        if (cleanPath.startsWith('blog/articles/') && !cleanPath.match(/^blog\/articles\/\d{4}\//)) {
+          const fileName = cleanPath.replace('blog/articles/', '')
+          const now = new Date()
+          const year = now.getFullYear()
+          const month = now.toLocaleString('pt-BR', { month: 'long' }).toLowerCase()
+          return `/api/blogs/${this.blogConfig.blogId}/images/blog/articles/${year}/${month}/${encodeURIComponent(fileName)}`
+        }
+        
+        // Outros caminhos que começam com blog/ são usados como estão
+        return `/api/blogs/${this.blogConfig.blogId}/images/${encodeURIComponent(cleanPath)}`
+      }
       
+      // Se é apenas um nome de arquivo (sem "/"), assume que está em blog/articles/ano/mês/
+      // Isso simplifica: "imagem.jpg" -> "blog/articles/2025/novembro/imagem.jpg"
+      if (!cleanPath.includes('/') && cleanPath.match(/\.(jpg|jpeg|png|gif|webp|svg|bmp)$/i)) {
+        const now = new Date()
+        const year = now.getFullYear()
+        const month = now.toLocaleString('pt-BR', { month: 'long' }).toLowerCase()
+        return `/api/blogs/${this.blogConfig.blogId}/images/blog/articles/${year}/${month}/${encodeURIComponent(cleanPath)}`
+      }
+    }
+
+    // Se é um caminho local, processa baseado na configuração do blog
+    if (cleanPath.startsWith('images/')) {
       // Verifica se é uma imagem compartilhada
-      if (cleanPath.startsWith('shared/')) {
-        return `/${cleanPath}`
+      if (cleanPath.startsWith('images/shared/')) {
+        return `/shared/${cleanPath.replace('images/shared/', '')}`
       }
       
       if (this.blogConfig.isExternal) {
@@ -144,6 +179,16 @@ export class BlogImageManager {
       }
     }
 
+    // Para URLs de API (caminhos blog/... do blog 3), verifica via HTTP
+    if (processedUrl.startsWith('/api/blogs/')) {
+      try {
+        const response = await fetch(processedUrl, { method: 'HEAD' })
+        return response.ok
+      } catch {
+        return false
+      }
+    }
+
     // Para caminhos locais, verifica se arquivo existe
     if (this.blogConfig.isExternal) {
       // Para blogs externos, verifica no sistema de arquivos
@@ -164,12 +209,30 @@ export class BlogImageManager {
    * Gera informações de debug para a imagem
    */
   getDebugInfo(imageUrl: string) {
+    const cleanPath = imageUrl.startsWith('/') ? imageUrl.slice(1) : imageUrl
+    const isExternalAsset = this.blogConfig.blogId === 3 && (
+      cleanPath.startsWith('blog/') || 
+      (!cleanPath.includes('/') && cleanPath.match(/\.(jpg|jpeg|png|gif|webp|svg|bmp)$/i))
+    )
+    
+    // Determina o caminho completo para assets externos
+    let fullPath: string | null = null
+    if (isExternalAsset && this.blogConfig.externalAssetsPath) {
+      const processedUrl = this.processImageUrl(imageUrl)
+      // Extrai o caminho da URL processada (remove /api/blogs/3/images/)
+      const pathFromUrl = processedUrl.replace(`/api/blogs/${this.blogConfig.blogId}/images/`, '')
+      fullPath = `${this.blogConfig.externalAssetsPath}/${pathFromUrl}`
+    }
+    
     return {
       originalUrl: imageUrl,
       processedUrl: this.processImageUrl(imageUrl),
       blogConfig: this.blogConfig,
       isExternalBlog: this.blogConfig.isExternal,
-      basePath: this.blogConfig.basePath
+      basePath: this.blogConfig.basePath,
+      externalAssetsPath: this.blogConfig.externalAssetsPath,
+      isExternalAsset: isExternalAsset,
+      fullPath: fullPath
     }
   }
 

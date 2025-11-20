@@ -133,6 +133,11 @@ async function handlePut(request: NextRequest, user: AuthenticatedUser, { params
       return createErrorResponse(validationError!, 400)
     }
 
+    // Truncar metaDescription se exceder 160 caracteres
+    if (data!.metadata?.metaDescription && data!.metadata.metaDescription.length > 160) {
+      data!.metadata.metaDescription = data!.metadata.metaDescription.substring(0, 160).trim()
+    }
+
     // Verificar se categoria e autor pertencem ao blog (se fornecidos)
     if (data!.categoryId) {
       const category = await prisma.category.findFirst({
@@ -221,53 +226,28 @@ async function handlePut(request: NextRequest, user: AuthenticatedUser, { params
 
     // Campo publishedAt não existe no schema atual, usar apenas published boolean
 
-    // Atualizar artigo usando transação
-    const updatedArticle = await prisma.$transaction(async (tx) => {
-      // Atualizar o artigo
-      const article = await tx.article.update({
-        where: { id: articleId },
-        data: {
-          ...(data!.title && { title: data!.title }),
-          ...(data!.description && { description: data!.description }),
-          ...(data!.content && { content: data!.content }),
-          ...(data!.imageUrl !== undefined && { imageUrl: data!.imageUrl }),
-          ...(data!.imageAlt !== undefined && { imageAlt: data!.imageAlt }),
-          ...(data!.categoryId && { categoryId: data!.categoryId }),
-          ...(data!.authorId && { authorId: data!.authorId }),
-          ...(data!.published !== undefined && { published: data!.published }),
-          ...(data!.type && { type: data!.type }),
-          ...(data!.metadata && { metadata: data!.metadata }),
-          slug: newSlug,
-          updatedAt: new Date()
-        }
-      })
-
-      // Atualizar tags se fornecidas
-      if (data!.tagIds !== undefined) {
-        // Remover todas as associações existentes
-        await tx.article.update({
-          where: { id: articleId },
-          data: {
-            tags: {
-              set: [] // Remove todas as tags
-            }
+    // Atualizar artigo em UMA única operação, incluindo tags via set (sem transação)
+    const updatedArticle = await prisma.article.update({
+      where: { id: articleId },
+      data: {
+        ...(data!.title && { title: data!.title }),
+        ...(data!.description && { description: data!.description }),
+        ...(data!.content && { content: data!.content }),
+        ...(data!.imageUrl !== undefined && { imageUrl: data!.imageUrl }),
+        ...(data!.imageAlt !== undefined && { imageAlt: data!.imageAlt }),
+        ...(data!.categoryId && { categoryId: data!.categoryId }),
+        ...(data!.authorId && { authorId: data!.authorId }),
+        ...(data!.published !== undefined && { published: data!.published }),
+        ...(data!.type && { type: data!.type }),
+        ...(data!.metadata && { metadata: data!.metadata }),
+        ...(data!.tagIds !== undefined && {
+          tags: {
+            set: data!.tagIds.map((id) => ({ id }))
           }
-        })
-
-        // Adicionar novas associações
-        if (data!.tagIds.length > 0) {
-          await tx.article.update({
-            where: { id: articleId },
-            data: {
-              tags: {
-                connect: data!.tagIds.map(id => ({ id }))
-              }
-            }
-          })
-        }
+        }),
+        slug: newSlug,
+        updatedAt: new Date()
       }
-
-      return article
     })
 
     // Buscar artigo completo com relacionamentos

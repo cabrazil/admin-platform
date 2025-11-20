@@ -133,10 +133,10 @@ export default function EditArticlePage() {
 
         if (!articleRes.ok) throw new Error(`Erro artigo: ${articleRes.status}`)
         
-        // Tratar erros de categorias e autores de forma mais suave
-        let categoriesData = { success: false, data: [] }
-        let authorsData = { success: false, data: [] }
-        let tagsData = []
+        // Tratar erros de categorias, autores e tags de forma mais suave
+        let categoriesData = { success: false, data: { categories: [] } }
+        let authorsData = { success: false, data: { authors: [] } }
+        let tagsData = { success: false, data: { tags: [] } }
         
         if (categoriesRes.ok) {
           categoriesData = await categoriesRes.json()
@@ -163,13 +163,18 @@ export default function EditArticlePage() {
         if (articleData.success && articleData.data) {
           const article = articleData.data
           
-          // Verificar se o autor do artigo pertence ao blog atual
-          const validAuthor = authorsData.data?.find((auth: Author) => auth.id === article.authorId)
+          // Extrair array de autores da estrutura de resposta
+          const authorsArray = authorsData.data?.authors || authorsData.data || []
           
-          if (!validAuthor && authorsData.data?.length > 0) {
+          // Verificar se o autor do artigo pertence ao blog atual
+          const validAuthor = Array.isArray(authorsArray) 
+            ? authorsArray.find((auth: Author) => auth.id === article.authorId)
+            : null
+          
+          if (!validAuthor && Array.isArray(authorsArray) && authorsArray.length > 0) {
             // Se o autor não for válido, usar o primeiro autor disponível
             console.log('⚠️ Autor do artigo não pertence ao blog, usando primeiro autor disponível')
-            article.authorId = authorsData.data[0].id
+            article.authorId = authorsArray[0].id
           }
           
           setArticle(article)
@@ -183,9 +188,9 @@ export default function EditArticlePage() {
           throw new Error('Artigo não encontrado nos dados')
         }
 
-        setCategories(categoriesData.data || [])
-        setAuthors(authorsData.data || [])
-        setTags(tagsData || [])
+        setCategories(categoriesData.data?.categories || categoriesData.data || [])
+        setAuthors(authorsData.data?.authors || authorsData.data || [])
+        setTags(tagsData?.data?.tags || tagsData?.data || tagsData || [])
         
         // Definir tags selecionadas do artigo
         if (articleData.success && articleData.data.tags) {
@@ -450,17 +455,54 @@ export default function EditArticlePage() {
                 </label>
                 <textarea
                   value={metaDescription}
-                  onChange={(e) => setMetaDescription(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value
+                    // maxLength já limita a 160, mas garantimos aqui também
+                    setMetaDescription(value.length <= 160 ? value : value.substring(0, 160))
+                  }}
+                  onPaste={(e) => {
+                    // Truncar automaticamente ao colar, respeitando palavras
+                    e.preventDefault()
+                    const pastedText = e.clipboardData.getData('text')
+                    const textLength = pastedText.length
+                    
+                    // Se o texto tem 160 ou menos caracteres, aceitar completamente
+                    if (textLength <= 160) {
+                      setMetaDescription(pastedText)
+                    } else {
+                      // Se exceder 160, truncar no último espaço antes de 160 para não cortar palavras
+                      let truncatedText = pastedText.substring(0, 160)
+                      const lastSpace = truncatedText.lastIndexOf(' ')
+                      
+                      // Se encontrar um espaço próximo (depois do caractere 140), usar ele
+                      if (lastSpace > 140 && lastSpace < 160) {
+                        truncatedText = truncatedText.substring(0, lastSpace)
+                      }
+                      
+                      // Garantir que não ficou vazio (fallback para exatamente 160)
+                      if (truncatedText.length === 0 || truncatedText.length > 160) {
+                        truncatedText = pastedText.substring(0, 160)
+                      }
+                      
+                      setMetaDescription(truncatedText)
+                    }
+                  }}
                   placeholder="Descrição que aparecerá nos resultados de busca (máx. 160 caracteres)"
                   maxLength={160}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    metaDescription.length > 140 && metaDescription.length <= 160 ? 'border-orange-300' : 'border-gray-300'
+                  }`}
                 />
                 <div className="flex justify-between items-center mt-1">
                   <p className="text-xs text-gray-500">
                     Descrição que aparecerá nos resultados de busca do Google
                   </p>
-                  <span className={`text-xs ${metaDescription.length > 140 ? 'text-orange-600' : 'text-gray-400'}`}>
+                  <span className={`text-xs font-medium ${
+                    metaDescription.length > 140 && metaDescription.length <= 160
+                      ? 'text-orange-600' 
+                      : 'text-gray-400'
+                  }`}>
                     {metaDescription.length}/160
                   </span>
                 </div>

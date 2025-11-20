@@ -83,7 +83,9 @@ function GenerateArticlePageContent() {
       
       // Buscar dados do blog
       console.log('🔍 Buscando dados do blog:', blogId)
-      const blogResponse = await fetch(`/api/blogs/${blogId}`)
+      const blogResponse = await fetch(`/api/blogs/${blogId}`, {
+        credentials: 'include'
+      })
       console.log('📊 Resposta blog:', blogResponse.status, blogResponse.statusText)
       if (!blogResponse.ok) {
         throw new Error('Blog não encontrado')
@@ -93,7 +95,9 @@ function GenerateArticlePageContent() {
       setBlog(blogData.data.blog)
       
       // Buscar prompts do blog
-      const promptsResponse = await fetch(`/api/blogs/${blogId}/prompts`)
+      const promptsResponse = await fetch(`/api/blogs/${blogId}/prompts`, {
+        credentials: 'include'
+      })
       if (!promptsResponse.ok) {
         throw new Error('Erro ao carregar prompts')
       }
@@ -102,26 +106,34 @@ function GenerateArticlePageContent() {
       
       // Buscar categorias do blog
       console.log('🔍 Buscando categorias para blog:', blogId)
-      const categoriesResponse = await fetch(`/api/blogs/${blogId}/categories`)
+      const categoriesResponse = await fetch(`/api/blogs/${blogId}/categories`, {
+        credentials: 'include'
+      })
       console.log('📊 Resposta categorias:', categoriesResponse.status, categoriesResponse.statusText)
       if (categoriesResponse.ok) {
         const categoriesData = await categoriesResponse.json()
-        console.log('📋 Categorias carregadas:', categoriesData.data.categories)
-        setCategories(categoriesData.data.categories || [])
+        console.log('📋 Categorias carregadas:', categoriesData.data?.categories)
+        setCategories(categoriesData.data?.categories || [])
       } else {
-        console.error('❌ Erro ao carregar categorias:', categoriesResponse.status)
+        const errorData = await categoriesResponse.json().catch(() => ({}))
+        console.error('❌ Erro ao carregar categorias:', categoriesResponse.status, errorData)
+        setError(`Erro ao carregar categorias: ${errorData.error || categoriesResponse.statusText}`)
       }
       
       // Buscar autores do blog
       console.log('🔍 Buscando autores para blog:', blogId)
-      const authorsResponse = await fetch(`/api/blogs/${blogId}/authors`)
+      const authorsResponse = await fetch(`/api/blogs/${blogId}/authors`, {
+        credentials: 'include'
+      })
       console.log('📊 Resposta autores:', authorsResponse.status, authorsResponse.statusText)
       if (authorsResponse.ok) {
         const authorsData = await authorsResponse.json()
-        console.log('👥 Autores carregados:', authorsData.data.authors)
-        setAuthors(authorsData.data.authors || [])
+        console.log('👥 Autores carregados:', authorsData.data?.authors)
+        setAuthors(authorsData.data?.authors || [])
       } else {
-        console.error('❌ Erro ao carregar autores:', authorsResponse.status)
+        const errorData = await authorsResponse.json().catch(() => ({}))
+        console.error('❌ Erro ao carregar autores:', authorsResponse.status, errorData)
+        setError(`Erro ao carregar autores: ${errorData.error || authorsResponse.statusText}`)
       }
       
     } catch (err) {
