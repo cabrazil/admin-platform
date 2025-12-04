@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
 import { getSession } from '@auth0/nextjs-auth0'
 import { findOrCreateUser, checkBlogAccess } from '@/lib/auth-db'
-
-const prisma = new PrismaClient()
+import { prisma } from '@/lib/prisma'
 
 export async function POST(
   request: NextRequest,
@@ -203,22 +201,90 @@ export async function GET(
       )
     }
 
-    // Buscar artigos do blog
-    const articles = await prisma.article.findMany({
-      where: { blogId },
-      include: {
-        category: true,
-        author: true,
-        user: true,
-        tags: true
-      },
-      orderBy: { createdAt: 'desc' }
-    })
+    // Obter parâmetros de paginação e filtros
+    const { searchParams } = new URL(request.url)
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '50')
+    const status = searchParams.get('status') || 'all'
+    const search = searchParams.get('search') || ''
+    const skip = (page - 1) * limit
+
+    // Construir filtros
+    const where: any = { blogId }
+    
+    // Filtro por status (published/draft/all)
+    if (status === 'published') {
+      where.published = true
+    } else if (status === 'draft') {
+      where.published = false
+    }
+    // Se status === 'all', não filtra por published
+
+    // Filtro de busca
+    if (search) {
+      where.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+        { slug: { contains: search, mode: 'insensitive' } }
+      ]
+    }
+
+    // Buscar artigos com paginação e campos otimizados
+    const [articles, total] = await Promise.all([
+      prisma.article.findMany({
+        where,
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          slug: true,
+          imageUrl: true,
+          published: true,
+          viewCount: true,
+          likeCount: true,
+          createdAt: true,
+          updatedAt: true,
+          date: true,
+          category: {
+            select: {
+              id: true,
+              title: true,
+              slug: true
+            }
+          },
+          author: {
+            select: {
+              id: true,
+              name: true,
+              imageUrl: true
+            }
+          },
+          tags: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              color: true
+            }
+          }
+        },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        skip
+      }),
+      prisma.article.count({ where })
+    ])
 
     return NextResponse.json({
       success: true,
       data: {
-        articles
+        articles,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit)
+        }
       }
     })
 

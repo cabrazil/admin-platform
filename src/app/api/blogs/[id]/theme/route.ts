@@ -1,8 +1,6 @@
 import { NextRequest } from 'next/server'
-import { PrismaClient } from '@prisma/client'
 import { requireAuth, createApiResponse, createErrorResponse, handleApiError, validateJsonBody, AuthenticatedUser } from '@/lib/api-auth'
-
-const prisma = new PrismaClient()
+import { prisma } from '@/lib/prisma'
 
 interface UpdateThemeData {
   themeSettings: any

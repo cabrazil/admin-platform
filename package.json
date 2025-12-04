@@ -7,7 +7,15 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "copy-vibesfilm-images": "./scripts/copy-vibesfilm-images.sh"
+    "copy-vibesfilm-images": "./scripts/copy-vibesfilm-images.sh",
+    "check-db": "node scripts/check-database.js",
+    "check-connections": "node scripts/check-connections.js",
+    "kill-idle-connections": "node scripts/kill-idle-connections.js",
+    "test-db-performance": "node scripts/test-db-performance.js",
+    "test-network-latency": "node scripts/test-network-latency.js",
+    "env:dev": "node scripts/switch-env.js dev",
+    "env:prod": "node scripts/switch-env.js prod",
+    "env:status": "node scripts/switch-env.js"
   },
   "dependencies": {
     "@auth0/nextjs-auth0": "^3.8.0",

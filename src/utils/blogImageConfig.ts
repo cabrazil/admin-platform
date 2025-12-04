@@ -165,8 +165,32 @@ export class BlogImageManager {
 
   /**
    * Verifica se a imagem existe no sistema de arquivos
+   * NOTA: Este método só funciona no servidor (Node.js), não no cliente (browser)
+   * No cliente, sempre retorna true para evitar erros
    */
   async checkImageExists(imageUrl: string): Promise<boolean> {
+    // Verificar se está rodando no servidor (Node.js) ou no cliente (browser)
+    const isServer = typeof window === 'undefined'
+    
+    // No cliente, sempre retorna true e verifica via HTTP se necessário
+    if (!isServer) {
+      const processedUrl = this.processImageUrl(imageUrl)
+      
+      // Para URLs externas ou de API, faz requisição HTTP
+      if (processedUrl.startsWith('http') || processedUrl.startsWith('/api/')) {
+        try {
+          const response = await fetch(processedUrl, { method: 'HEAD' })
+          return response.ok
+        } catch {
+          return false
+        }
+      }
+      
+      // Para caminhos locais no cliente, assume que existe
+      return true
+    }
+    
+    // Código do servidor (Node.js)
     const processedUrl = this.processImageUrl(imageUrl)
     
     // Para URLs externas, faz requisição HTTP
@@ -189,12 +213,13 @@ export class BlogImageManager {
       }
     }
 
-    // Para caminhos locais, verifica se arquivo existe
+    // Para caminhos locais, verifica se arquivo existe (apenas no servidor)
     if (this.blogConfig.isExternal) {
-      // Para blogs externos, verifica no sistema de arquivos
       try {
+        // Importação dinâmica do fs apenas no servidor
         const fs = await import('fs')
-        const fullPath = `${this.blogConfig.basePath}/${processedUrl.replace(/^\//, '')}`
+        const path = await import('path')
+        const fullPath = path.join(this.blogConfig.basePath, processedUrl.replace(/^\//, ''))
         return fs.existsSync(fullPath)
       } catch {
         return false

@@ -1,8 +1,6 @@
 import { NextRequest } from 'next/server'
-import { PrismaClient } from '@prisma/client'
 import { requireAuth, createApiResponse, createErrorResponse, handleApiError, validateJsonBody, AuthenticatedUser, validateBlogAccess } from '@/lib/api-auth'
-
-const prisma = new PrismaClient()
+import { prisma } from '@/lib/prisma'
 
 interface UpdateBlogData {
   title?: string

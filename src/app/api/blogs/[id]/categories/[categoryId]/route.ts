@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
 import { requireAuth } from '@/lib/api-auth'
 import type { AuthenticatedUser } from '@/lib/api-auth'
-
-const prisma = new PrismaClient()
+import { prisma } from '@/lib/prisma'
 
 // PUT /api/blogs/[id]/categories/[categoryId] - Atualizar categoria
 async function handlePut(request: NextRequest, user: AuthenticatedUser, context: { params: Promise<{ id: string; categoryId: string }> }) {

@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
 import { getSession } from '@auth0/nextjs-auth0'
 import { findOrCreateUser, checkBlogAccess } from '@/lib/auth-db'
 import { generateArticleContent, getAvailableProviders, getProviderConfig } from '@/lib/ai-providers'
-
-const prisma = new PrismaClient()
+import { prisma } from '@/lib/prisma'
 
 export async function POST(
   request: NextRequest,

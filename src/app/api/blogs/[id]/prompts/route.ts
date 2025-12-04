@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
 import { getSession } from '@auth0/nextjs-auth0'
 import { findOrCreateUser, checkBlogAccess } from '@/lib/auth-db'
-
-const prisma = new PrismaClient()
+import { prisma } from '@/lib/prisma'
 
 export async function GET(
   request: NextRequest,
@@ -44,11 +42,27 @@ export async function GET(
       )
     }
 
-    // Buscar prompts do blog
+    // Obter parâmetro opcional para filtrar por isActive
+    const { searchParams } = new URL(request.url)
+    const includeInactive = searchParams.get('includeInactive') === 'true'
+
+    // Construir filtro
+    const where: any = { blogId }
+    if (!includeInactive) {
+      where.isActive = true
+    }
+
+    // Buscar prompts do blog (campos otimizados)
     const prompts = await prisma.aiPrompt.findMany({
-      where: { 
-        blogId,
-        isActive: true 
+      where,
+      select: {
+        id: true,
+        name: true,
+        content: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
+        blogId: true
       },
       orderBy: { name: 'asc' },
     })

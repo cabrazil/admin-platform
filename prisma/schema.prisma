@@ -5,6 +5,8 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
+  // DIRECT_URL é opcional - necessário apenas para Supabase (com pgbouncer)
+  // Para PostgreSQL VPS direto, pode ser omitido
   directUrl = env("DIRECT_URL")
 }
 

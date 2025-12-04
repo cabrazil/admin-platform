@@ -94,44 +94,36 @@ function BlogArticlesPageContent() {
 
   useEffect(() => {
     if (!isLoading && dbUser && blogId) {
-      checkAccess()
+      fetchBlogAndArticles()
     }
-  }, [isLoading, dbUser, blogId])
-
-  const checkAccess = async () => {
-    try {
-      const response = await fetch(`/api/blogs/${blogId}/access`)
-      if (response.ok) {
-        const data = await response.json()
-        if (data.success) {
-          setHasAccess(data.data.hasAccess)
-          setUserRole(data.data.role)
-          
-          if (data.data.hasAccess) {
-            fetchBlogAndArticles()
-          } else {
-            setError('Você não tem permissão para acessar este blog')
-            setLoading(false)
-          }
-        }
-      }
-    } catch (err) {
-      console.error('Erro ao verificar acesso:', err)
-      setError('Erro ao verificar permissões')
-      setLoading(false)
-    }
-  }
+  }, [isLoading, dbUser, blogId, filterStatus, searchTerm])
 
   const fetchBlogAndArticles = async () => {
     try {
       setLoading(true)
       setError(null)
       
-      // Buscar blog e artigos em paralelo
-      const [blogResponse, articlesResponse] = await Promise.all([
-        fetch(`/api/blogs/${blogId}`),
-        fetch(`/api/blogs/${blogId}/articles?status=${filterStatus}&search=${searchTerm}`)
+      // Buscar blog, acesso e artigos em paralelo (otimizado)
+      const [blogResponse, accessResponse, articlesResponse] = await Promise.all([
+        fetch(`/api/blogs/${blogId}`, { credentials: 'include' }),
+        fetch(`/api/blogs/${blogId}/access`, { credentials: 'include' }),
+        fetch(`/api/blogs/${blogId}/articles?status=${filterStatus}&search=${searchTerm}&limit=50`, { credentials: 'include' })
       ])
+      
+      // Verificar acesso primeiro
+      if (accessResponse.ok) {
+        const accessData = await accessResponse.json()
+        if (accessData.success) {
+          setHasAccess(accessData.data.hasAccess)
+          setUserRole(accessData.data.role)
+          
+          if (!accessData.data.hasAccess) {
+            setError('Você não tem permissão para acessar este blog')
+            setLoading(false)
+            return
+          }
+        }
+      }
       
       if (!blogResponse.ok) {
         throw new Error(`Erro ao carregar blog: ${blogResponse.status}`)
@@ -445,3 +437,4 @@ export default function BlogArticlesPage() {
     </AuthWrapper>
   )
 }
+

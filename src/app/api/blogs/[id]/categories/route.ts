@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
 import { getSession } from '@auth0/nextjs-auth0'
 import { findOrCreateUser, checkBlogAccess } from '@/lib/auth-db'
-
-const prisma = new PrismaClient()
+import { prisma } from '@/lib/prisma'
 
 // GET /api/blogs/[id]/categories - Listar categorias do blog
 export async function GET(

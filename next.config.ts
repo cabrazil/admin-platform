@@ -47,6 +47,18 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  webpack: (config, { isServer }) => {
+    // Ignorar módulos Node.js no cliente para evitar erros de bundle
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        path: false,
+        os: false,
+      };
+    }
+    return config;
+  },
 };
 
 export default nextConfig;

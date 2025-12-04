@@ -61,24 +61,32 @@ function BlogPromptsPageContent() {
       setLoading(true)
       setError(null)
       
-      // Buscar dados do blog
-      const blogResponse = await fetch(`/api/blogs/${blogId}`)
+      // Buscar blog e prompts em paralelo (otimizado)
+      const [blogResponse, promptsResponse] = await Promise.all([
+        fetch(`/api/blogs/${blogId}`, { credentials: 'include' }),
+        fetch(`/api/blogs/${blogId}/prompts?includeInactive=true`, { credentials: 'include' })
+      ])
+      
       if (!blogResponse.ok) {
         throw new Error('Blog não encontrado')
       }
-      const blogData = await blogResponse.json()
-      setBlog(blogData.data.blog)
       
-      // Buscar prompts do blog
-      const promptsResponse = await fetch(`/api/blogs/${blogId}/prompts`)
       if (!promptsResponse.ok) {
-        const errorData = await promptsResponse.json()
+        const errorData = await promptsResponse.json().catch(() => ({}))
         throw new Error(errorData.error || 'Erro ao carregar prompts')
       }
       
-      const promptsData = await promptsResponse.json()
+      const [blogData, promptsData] = await Promise.all([
+        blogResponse.json(),
+        promptsResponse.json()
+      ])
+      
+      if (blogData.success) {
+        setBlog(blogData.data.blog || blogData.data)
+      }
+      
       if (promptsData.success) {
-        setPrompts(promptsData.data.prompts)
+        setPrompts(promptsData.data.prompts || [])
       } else {
         throw new Error(promptsData.error || 'Erro ao carregar prompts')
       }
