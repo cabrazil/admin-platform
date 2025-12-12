@@ -15,7 +15,7 @@ export async function GET(
   try {
     const { id, path: pathSegments } = await params
     const blogId = parseInt(id)
-    
+
     if (isNaN(blogId)) {
       return NextResponse.json(
         { error: 'ID do blog inválido' },
@@ -33,15 +33,16 @@ export async function GET(
     }
 
     // Reconstrói o caminho relativo da imagem
+    // pathSegments já vem decodificado pelo Next.js
     const imagePath = pathSegments.join('/')
-    
+
     // Monta o caminho absoluto completo
     const fullPath = path.join(blogConfig.externalAssetsPath, imagePath)
-    
+
     // Validação de segurança: garante que o caminho está dentro do diretório permitido
     const normalizedFullPath = path.normalize(fullPath)
     const normalizedBasePath = path.normalize(blogConfig.externalAssetsPath)
-    
+
     if (!normalizedFullPath.startsWith(normalizedBasePath)) {
       return NextResponse.json(
         { error: 'Caminho inválido' },
@@ -52,14 +53,18 @@ export async function GET(
     // Verifica se o arquivo existe
     if (!existsSync(normalizedFullPath)) {
       return NextResponse.json(
-        { error: 'Imagem não encontrada' },
+        {
+          error: 'Imagem não encontrada',
+          path: normalizedFullPath,
+          exists: false
+        },
         { status: 404 }
       )
     }
 
     // Lê o arquivo
     const fileBuffer = await readFile(normalizedFullPath)
-    
+
     // Determina o tipo MIME baseado na extensão
     const ext = path.extname(normalizedFullPath).toLowerCase()
     const mimeTypes: Record<string, string> = {

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
+import { marked } from 'marked'
 import AuthWrapper from '@/components/AuthWrapper'
 import { LoadingSelect } from '@/components/LoadingSelect'
 import { useAuth } from '@/hooks/useAuth'
@@ -375,29 +376,41 @@ function NewArticlePageContent() {
     const file = event.target.files?.[0]
     if (!file) return
 
-    if (file.type !== 'text/html' && !file.name.endsWith('.html')) {
-      setError('Por favor, selecione um arquivo HTML (.html)')
+    // Verificar se é HTML ou Markdown
+    const isHtml = file.type === 'text/html' || file.name.endsWith('.html')
+    const isMarkdown = file.name.endsWith('.md') || file.name.endsWith('.markdown')
+
+    if (!isHtml && !isMarkdown) {
+      setError('Por favor, selecione um arquivo HTML (.html) ou Markdown (.md, .markdown)')
       return
     }
 
     const reader = new FileReader()
     reader.onload = (e) => {
       try {
-        const htmlContent = e.target?.result as string
+        let content = e.target?.result as string
 
-        // Extrair conteúdo do HTML do Word
-        const extractedContent = extractContentFromWordHTML(htmlContent)
+        if (isMarkdown) {
+          // Converter Markdown para HTML
+          console.log('📝 Convertendo Markdown para HTML...')
+          content = marked.parse(content) as string
+          setSuccess('✅ Arquivo Markdown importado e convertido com sucesso! Use "Visualizar" para verificar o resultado.')
+        } else {
+          // Extrair conteúdo do HTML do Word
+          console.log('📄 Processando HTML do Word...')
+          content = extractContentFromWordHTML(content)
+          setSuccess('✅ Arquivo HTML do Word importado com sucesso! Use "Visualizar" para verificar o resultado.')
+        }
 
-        setContent(extractedContent)
-        setSuccess('Arquivo HTML do Word importado com sucesso! Use "Visualizar" para verificar o resultado.')
+        setContent(content)
 
         // Limpar o input
         if (fileInputRef.current) {
           fileInputRef.current.value = ''
         }
       } catch (error) {
-        console.error('Erro ao processar arquivo HTML:', error)
-        setError('Erro ao processar arquivo HTML do Word')
+        console.error('❌ Erro ao processar arquivo:', error)
+        setError(`Erro ao processar arquivo: ${error instanceof Error ? error.message : 'Erro desconhecido'}`)
       }
     }
 
@@ -821,23 +834,23 @@ function NewArticlePageContent() {
                     Conteúdo do Artigo *
                   </label>
                   <div className="flex items-center gap-2">
-                    {/* Input de arquivo HTML (oculto) */}
+                    {/* Input de arquivo HTML/Markdown (oculto) */}
                     <input
                       ref={fileInputRef}
                       type="file"
-                      accept=".html,text/html"
+                      accept=".html,.md,.markdown,text/html,text/markdown"
                       onChange={handleFileUpload}
                       className="hidden"
                     />
 
-                    {/* Botão para importar HTML do Word */}
+                    {/* Botão para importar HTML ou Markdown */}
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
                       className="flex items-center gap-1 text-sm text-purple-600 hover:text-purple-800"
                     >
                       <Upload className="h-4 w-4" />
-                      Importar HTML
+                      Importar HTML/MD
                     </button>
 
                     <button
@@ -1019,7 +1032,8 @@ function NewArticlePageContent() {
         <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
           <h3 className="text-sm font-medium text-blue-900 mb-2">💡 Dicas para criar artigos:</h3>
           <ul className="text-sm text-blue-800 space-y-1">
-            <li>• <strong>HTML do Word (Recomendado):</strong> No Word, salve como "Página da Web (.html)" e use "Importar HTML"</li>
+            <li>• <strong>Markdown (Novo!):</strong> Importe arquivos .md ou .markdown - conversão automática para HTML</li>
+            <li>• <strong>HTML do Word (Recomendado):</strong> No Word, salve como "Página da Web (.html)" e use "Importar HTML/MD"</li>
             <li>• <strong>Texto do Word:</strong> Cole o texto e clique em "Converter Word" para manter a formatação</li>
             <li>• <strong>Formatação automática:</strong> Títulos em negrito e maiúsculas são convertidos para H2</li>
             <li>• <strong>Listas:</strong> Suporta bullets (•, -, *, ○, ■, ▶), números (1., 2.) e letras (a., b.)</li>

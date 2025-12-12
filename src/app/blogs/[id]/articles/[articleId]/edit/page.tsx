@@ -98,7 +98,7 @@ export default function EditArticlePage() {
   const [tags, setTags] = useState<Tag[]>([])
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([])
   const [error, setError] = useState<string | null>(null)
-  
+
   // Campos SEO
   const [seoTitle, setSeoTitle] = useState<string>("")
   const [metaDescription, setMetaDescription] = useState<string>("")
@@ -115,7 +115,7 @@ export default function EditArticlePage() {
         setLoading(true)
         setError(null)
         console.log('🔍 Carregando dados para Blog:', blogId, 'Artigo:', articleId)
-        
+
         // Carregar dados em paralelo
         const [articleRes, categoriesRes, authorsRes, tagsRes] = await Promise.all([
           fetch(`/api/articles/${articleId}`, { credentials: 'include' }),
@@ -132,24 +132,24 @@ export default function EditArticlePage() {
         })
 
         if (!articleRes.ok) throw new Error(`Erro artigo: ${articleRes.status}`)
-        
+
         // Tratar erros de categorias, autores e tags de forma mais suave
         let categoriesData = { success: false, data: { categories: [] } }
         let authorsData = { success: false, data: { authors: [] } }
         let tagsData = { success: false, data: { tags: [] } }
-        
+
         if (categoriesRes.ok) {
           categoriesData = await categoriesRes.json()
         } else {
           console.warn('⚠️ Erro ao carregar categorias:', categoriesRes.status)
         }
-        
+
         if (authorsRes.ok) {
           authorsData = await authorsRes.json()
         } else {
           console.warn('⚠️ Erro ao carregar autores:', authorsRes.status)
         }
-        
+
         if (tagsRes.ok) {
           tagsData = await tagsRes.json()
         } else {
@@ -162,23 +162,23 @@ export default function EditArticlePage() {
 
         if (articleData.success && articleData.data) {
           const article = articleData.data
-          
+
           // Extrair array de autores da estrutura de resposta
           const authorsArray = authorsData.data?.authors || authorsData.data || []
-          
+
           // Verificar se o autor do artigo pertence ao blog atual
-          const validAuthor = Array.isArray(authorsArray) 
+          const validAuthor = Array.isArray(authorsArray)
             ? authorsArray.find((auth: Author) => auth.id === article.authorId)
             : null
-          
+
           if (!validAuthor && Array.isArray(authorsArray) && authorsArray.length > 0) {
             // Se o autor não for válido, usar o primeiro autor disponível
             console.log('⚠️ Autor do artigo não pertence ao blog, usando primeiro autor disponível')
             article.authorId = authorsArray[0].id
           }
-          
+
           setArticle(article)
-          
+
           // Inicializar campos SEO
           if (article.metadata) {
             setSeoTitle(article.metadata.seoTitle || '')
@@ -191,7 +191,7 @@ export default function EditArticlePage() {
         setCategories(categoriesData.data?.categories || categoriesData.data || [])
         setAuthors(authorsData.data?.authors || authorsData.data || [])
         setTags(tagsData?.data?.tags || tagsData?.data || tagsData || [])
-        
+
         // Definir tags selecionadas do artigo
         if (articleData.success && articleData.data.tags) {
           setSelectedTagIds(articleData.data.tags.map((tag: any) => tag.id))
@@ -213,21 +213,21 @@ export default function EditArticlePage() {
 
     try {
       setSaving(true)
-      
+
       // Validar se categoria e autor pertencem ao blog
       const validCategory = categories.find(cat => cat.id === article.categoryId)
       const validAuthor = authors.find(auth => auth.id === article.authorId)
-      
+
       if (!validCategory) {
         alert('Categoria selecionada não pertence a este blog!')
         return
       }
-      
+
       if (!validAuthor) {
         alert('Autor selecionado não pertence a este blog!')
         return
       }
-      
+
       // Filtrar apenas os campos que podem ser atualizados
       const updateData = {
         title: article.title,
@@ -246,16 +246,16 @@ export default function EditArticlePage() {
           metaDescription: metaDescription.trim() || null,
         },
       }
-      
+
       console.log('💾 Salvando artigo:', updateData)
-      
+
       const response = await fetch(`/api/articles/${article.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify(updateData),
       })
-      
+
       if (!response.ok) {
         const errorData = await response.json()
         throw new Error(errorData.error || `Erro HTTP: ${response.status}`)
@@ -263,7 +263,7 @@ export default function EditArticlePage() {
 
       const result = await response.json()
       console.log('✅ Salvo com sucesso:', result)
-      
+
       alert('Artigo salvo com sucesso!')
       router.push(`/blogs/${blogId}/articles`)
     } catch (err) {
@@ -465,7 +465,7 @@ export default function EditArticlePage() {
                     e.preventDefault()
                     const pastedText = e.clipboardData.getData('text')
                     const textLength = pastedText.length
-                    
+
                     // Se o texto tem 160 ou menos caracteres, aceitar completamente
                     if (textLength <= 160) {
                       setMetaDescription(pastedText)
@@ -473,36 +473,34 @@ export default function EditArticlePage() {
                       // Se exceder 160, truncar no último espaço antes de 160 para não cortar palavras
                       let truncatedText = pastedText.substring(0, 160)
                       const lastSpace = truncatedText.lastIndexOf(' ')
-                      
+
                       // Se encontrar um espaço próximo (depois do caractere 140), usar ele
                       if (lastSpace > 140 && lastSpace < 160) {
                         truncatedText = truncatedText.substring(0, lastSpace)
                       }
-                      
+
                       // Garantir que não ficou vazio (fallback para exatamente 160)
                       if (truncatedText.length === 0 || truncatedText.length > 160) {
                         truncatedText = pastedText.substring(0, 160)
                       }
-                      
+
                       setMetaDescription(truncatedText)
                     }
                   }}
                   placeholder="Descrição que aparecerá nos resultados de busca (máx. 160 caracteres)"
                   maxLength={160}
                   rows={3}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                    metaDescription.length > 140 && metaDescription.length <= 160 ? 'border-orange-300' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${metaDescription.length > 140 && metaDescription.length <= 160 ? 'border-orange-300' : 'border-gray-300'
+                    }`}
                 />
                 <div className="flex justify-between items-center mt-1">
                   <p className="text-xs text-gray-500">
                     Descrição que aparecerá nos resultados de busca do Google
                   </p>
-                  <span className={`text-xs font-medium ${
-                    metaDescription.length > 140 && metaDescription.length <= 160
-                      ? 'text-orange-600' 
-                      : 'text-gray-400'
-                  }`}>
+                  <span className={`text-xs font-medium ${metaDescription.length > 140 && metaDescription.length <= 160
+                    ? 'text-orange-600'
+                    : 'text-gray-400'
+                    }`}>
                     {metaDescription.length}/160
                   </span>
                 </div>
@@ -518,7 +516,7 @@ export default function EditArticlePage() {
                 {categories.length === 0 ? (
                   <div className="w-full px-3 py-2 border border-yellow-300 rounded-lg bg-yellow-50">
                     <p className="text-yellow-700 text-sm">
-                      ⚠️ Nenhuma categoria encontrada. 
+                      ⚠️ Nenhuma categoria encontrada.
                       <a href={`/categories?blogId=${blogId}`} className="text-blue-600 hover:underline ml-1">
                         Criar categorias
                       </a>
@@ -528,11 +526,10 @@ export default function EditArticlePage() {
                   <select
                     value={article.categoryId}
                     onChange={(e) => setArticle({ ...article, categoryId: parseInt(e.target.value) })}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                      categories.find(cat => cat.id === article.categoryId) 
-                        ? 'border-green-500' 
-                        : 'border-red-500'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${categories.find(cat => cat.id === article.categoryId)
+                      ? 'border-green-500'
+                      : 'border-red-500'
+                      }`}
                   >
                     {categories.map((category) => (
                       <option key={category.id} value={category.id}>
@@ -555,7 +552,7 @@ export default function EditArticlePage() {
                 {authors.length === 0 ? (
                   <div className="w-full px-3 py-2 border border-yellow-300 rounded-lg bg-yellow-50">
                     <p className="text-yellow-700 text-sm">
-                      ⚠️ Nenhum autor encontrado. 
+                      ⚠️ Nenhum autor encontrado.
                       <a href={`/authors?blogId=${blogId}`} className="text-blue-600 hover:underline ml-1">
                         Criar autores
                       </a>
@@ -565,11 +562,10 @@ export default function EditArticlePage() {
                   <select
                     value={article.authorId}
                     onChange={(e) => setArticle({ ...article, authorId: parseInt(e.target.value) })}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                      authors.find(auth => auth.id === article.authorId) 
-                        ? 'border-green-500' 
-                        : 'border-red-500'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${authors.find(auth => auth.id === article.authorId)
+                      ? 'border-green-500'
+                      : 'border-red-500'
+                      }`}
                   >
                     {authors.map((author) => (
                       <option key={author.id} value={author.id}>
@@ -651,7 +647,7 @@ export default function EditArticlePage() {
                     imageUrl={article.imageUrl}
                     alt="Preview da imagem do artigo"
                     className="w-full h-32 object-cover rounded border"
-                    showDebugInfo={true}
+                    showDebugInfo={false}
                     blogId={parseInt(blogId)}
                   />
                 </div>
