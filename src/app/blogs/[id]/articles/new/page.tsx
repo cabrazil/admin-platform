@@ -6,7 +6,7 @@ import Link from 'next/link'
 import AuthWrapper from '@/components/AuthWrapper'
 import { LoadingSelect } from '@/components/LoadingSelect'
 import { useAuth } from '@/hooks/useAuth'
-import { 
+import {
   ArrowLeft,
   Save,
   FileText,
@@ -45,11 +45,11 @@ function NewArticlePageContent() {
   const router = useRouter()
   const params = useParams()
   const blogId = params?.id as string
-  
+
   const [blog, setBlog] = useState<Blog | null>(null)
   const [categories, setCategories] = useState<Category[]>([])
   const [authors, setAuthors] = useState<Author[]>([])
-  
+
   const [title, setTitle] = useState<string>("")
   const [description, setDescription] = useState<string>("")
   const [content, setContent] = useState<string>("")
@@ -59,12 +59,12 @@ function NewArticlePageContent() {
   const [published, setPublished] = useState<boolean>(false)
   const [showPreview, setShowPreview] = useState<boolean>(false)
   const [isConverting, setIsConverting] = useState<boolean>(false)
-  
+
   // Campos SEO
   const [seoTitle, setSeoTitle] = useState<string>("")
   const [metaDescription, setMetaDescription] = useState<string>("")
   const fileInputRef = useRef<HTMLInputElement>(null)
-  
+
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -80,7 +80,7 @@ function NewArticlePageContent() {
     try {
       setLoading(true)
       setError(null)
-      
+
       // Buscar dados do blog
       const blogResponse = await fetch(`/api/blogs/${blogId}`)
       if (!blogResponse.ok) {
@@ -88,23 +88,25 @@ function NewArticlePageContent() {
       }
       const blogData = await blogResponse.json()
       setBlog(blogData.data.blog)
-      
+
       // Buscar categorias do blog
       const categoriesResponse = await fetch(`/api/blogs/${blogId}/categories`)
       if (!categoriesResponse.ok) {
         throw new Error('Erro ao carregar categorias')
       }
       const categoriesData = await categoriesResponse.json()
-      setCategories(categoriesData.data || [])
-      
+      console.log('📂 Categorias recebidas:', categoriesData)
+      setCategories(categoriesData.data?.categories || categoriesData.data || [])
+
       // Buscar autores do blog
       const authorsResponse = await fetch(`/api/blogs/${blogId}/authors`)
       if (!authorsResponse.ok) {
         throw new Error('Erro ao carregar autores')
       }
       const authorsData = await authorsResponse.json()
-      setAuthors(authorsData.data || [])
-      
+      console.log('👤 Autores recebidos:', authorsData)
+      setAuthors(authorsData.data?.authors || authorsData.data || [])
+
     } catch (err) {
       console.error('❌ Erro ao carregar dados:', err)
       setError(err instanceof Error ? err.message : 'Erro desconhecido')
@@ -145,7 +147,7 @@ function NewArticlePageContent() {
     if (!validateForm()) {
       return
     }
-    
+
     setSaving(true)
 
     try {
@@ -176,7 +178,7 @@ function NewArticlePageContent() {
       }
 
       setSuccess("Artigo criado com sucesso!")
-      
+
       // Redirecionar para o artigo após 2 segundos
       setTimeout(() => {
         if (data.data?.article?.id) {
@@ -196,7 +198,7 @@ function NewArticlePageContent() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setError(null)
     const { name, value, type } = e.target
-    
+
     switch (name) {
       case 'title':
         setTitle(value)
@@ -239,7 +241,7 @@ function NewArticlePageContent() {
       convertedContent = convertedContent.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
 
       // Detectar e converter títulos primeiro (antes de processar parágrafos)
-      
+
       // Título principal (primeiro título encontrado) - H1
       let titleCount = 0
       convertedContent = convertedContent.replace(
@@ -249,7 +251,7 @@ function NewArticlePageContent() {
           return titleCount === 1 ? `<h1>${title}</h1>\n` : `<h2>${title}</h2>\n`
         }
       )
-      
+
       // Títulos em negrito com asteriscos
       convertedContent = convertedContent.replace(
         /^(\*\*[^*]+\*\*)\n/gi,
@@ -259,7 +261,7 @@ function NewArticlePageContent() {
           return titleCount === 1 ? `<h1>${cleanTitle}</h1>\n` : `<h2>${cleanTitle}</h2>\n`
         }
       )
-      
+
       // Títulos em negrito com underscores
       convertedContent = convertedContent.replace(
         /^(__[^_]+__)\n/gi,
@@ -272,10 +274,10 @@ function NewArticlePageContent() {
 
       // Converter quebras de linha duplas em parágrafos
       convertedContent = convertedContent.replace(/\n\n+/g, '</p>\n<p>')
-      
+
       // Converter quebras de linha simples em <br>
       convertedContent = convertedContent.replace(/\n/g, '<br>')
-      
+
       // Envolver em tags de parágrafo se não estiver
       if (!convertedContent.startsWith('<h') && !convertedContent.startsWith('<p>')) {
         convertedContent = '<p>' + convertedContent
@@ -285,37 +287,37 @@ function NewArticlePageContent() {
       }
 
       // Converter listas com bullets - diferentes formatos
-      
+
       // Bullets padrão (•) - com <br> ou início de linha
       convertedContent = convertedContent.replace(
         /(<br>|^)•\s*([^<]+)/gi,
         '</p>\n<ul>\n<li>$2</li>\n</ul>\n<p>'
       )
-      
+
       // Hífens (-) - com <br> ou início de linha
       convertedContent = convertedContent.replace(
         /(<br>|^)-\s*([^<]+)/gi,
         '</p>\n<ul>\n<li>$2</li>\n</ul>\n<p>'
       )
-      
+
       // Asteriscos (*) - com <br> ou início de linha
       convertedContent = convertedContent.replace(
         /(<br>|^)\*\s*([^<]+)/gi,
         '</p>\n<ul>\n<li>$2</li>\n</ul>\n<p>'
       )
-      
+
       // Círculos (○) - com <br> ou início de linha
       convertedContent = convertedContent.replace(
         /(<br>|^)○\s*([^<]+)/gi,
         '</p>\n<ul>\n<li>$2</li>\n</ul>\n<p>'
       )
-      
+
       // Quadrados (■) - com <br> ou início de linha
       convertedContent = convertedContent.replace(
         /(<br>|^)■\s*([^<]+)/gi,
         '</p>\n<ul>\n<li>$2</li>\n</ul>\n<p>'
       )
-      
+
       // Triângulos (▶) - com <br> ou início de linha
       convertedContent = convertedContent.replace(
         /(<br>|^)▶\s*([^<]+)/gi,
@@ -327,7 +329,7 @@ function NewArticlePageContent() {
         /(<br>|^)(\d+)\.\s*([^<]+)/gi,
         '</p>\n<ol>\n<li>$3</li>\n</ol>\n<p>'
       )
-      
+
       // Converter listas com letras (a., b., c.) - com <br> ou início de linha
       convertedContent = convertedContent.replace(
         /(<br>|^)([a-z])\.\s*([^<]+)/gi,
@@ -346,7 +348,7 @@ function NewArticlePageContent() {
       convertedContent = convertedContent.replace(/<p><\/p>/g, '')
       convertedContent = convertedContent.replace(/<p><br><\/p>/g, '')
       convertedContent = convertedContent.replace(/<p>\s*<\/p>/g, '')
-      
+
       // Consolidar listas consecutivas
       convertedContent = consolidateLists(convertedContent)
 
@@ -360,7 +362,7 @@ function NewArticlePageContent() {
 
       setContent(convertedContent)
       setSuccess('Formatação do Word convertida com sucesso! Use "Visualizar" para verificar o resultado.')
-      
+
     } catch (error) {
       console.error('Erro ao converter formatação:', error)
       setError('Erro ao converter formatação do Word')
@@ -382,13 +384,13 @@ function NewArticlePageContent() {
     reader.onload = (e) => {
       try {
         const htmlContent = e.target?.result as string
-        
+
         // Extrair conteúdo do HTML do Word
         const extractedContent = extractContentFromWordHTML(htmlContent)
-        
+
         setContent(extractedContent)
         setSuccess('Arquivo HTML do Word importado com sucesso! Use "Visualizar" para verificar o resultado.')
-        
+
         // Limpar o input
         if (fileInputRef.current) {
           fileInputRef.current.value = ''
@@ -398,7 +400,7 @@ function NewArticlePageContent() {
         setError('Erro ao processar arquivo HTML do Word')
       }
     }
-    
+
     reader.readAsText(file)
   }
 
@@ -406,17 +408,17 @@ function NewArticlePageContent() {
     // Criar um DOM parser temporário
     const parser = new DOMParser()
     const doc = parser.parseFromString(htmlContent, 'text/html')
-    
+
     // O Word geralmente coloca o conteúdo no body
     const body = doc.body
-    
+
     // Remover scripts e estilos
     const scripts = body.querySelectorAll('script, style')
     scripts.forEach(script => script.remove())
-    
+
     // Extrair apenas o conteúdo textual com formatação
     let content = body.innerHTML
-    
+
     // Limpar tags específicas do Word que não queremos
     content = content.replace(/<o:p[^>]*>/g, '')
     content = content.replace(/<\/o:p>/g, '')
@@ -424,36 +426,36 @@ function NewArticlePageContent() {
     content = content.replace(/<\/w:[^>]*>/g, '')
     content = content.replace(/<m:[^>]*>/g, '')
     content = content.replace(/<\/m:[^>]*>/g, '')
-    
+
     // Limpar classes CSS do Word (mantendo a estrutura)
     content = content.replace(/class="[^"]*"/g, '')
     content = content.replace(/class='[^']*'/g, '')
-    
+
     // Limpar outros atributos específicos do Word
     content = content.replace(/id="[^"]*"/g, '')
     content = content.replace(/id='[^']*'/g, '')
     content = content.replace(/style="[^"]*"/g, '')
     content = content.replace(/style='[^']*'/g, '')
-    
+
     // Converter quebras de linha do Word
     content = content.replace(/<br[^>]*>/gi, '<br>')
-    
+
     // Preservar formatação original - não remover spans com conteúdo
     // Apenas remover spans vazios
     content = content.replace(/<span[^>]*><\/span>/g, '')
-    
+
     // Preservar negrito e itálico que já existem no HTML
     // Não converter spans para texto simples se eles contêm formatação
-    
+
     // Processar formatação do Word de forma mais inteligente
     content = processWordFormatting(content)
-    
+
     // Processar listas do Word especificamente
     content = processWordLists(content)
-    
+
     // Limpar espaços extras
     content = content.trim()
-    
+
     return content
   }
 
@@ -463,19 +465,19 @@ function NewArticlePageContent() {
       /<\/ul>\s*<p>\s*<\/p>\s*<ul>/g,
       ''
     )
-    
+
     // Consolidar listas ordenadas consecutivas
     content = content.replace(
       /<\/ol>\s*<p>\s*<\/p>\s*<ol>/g,
       ''
     )
-    
+
     // Consolidar itens de lista que foram separados por parágrafos vazios
     content = content.replace(
       /<\/li>\s*<p>\s*<\/p>\s*<li>/g,
       '</li>\n<li>'
     )
-    
+
     return content
   }
 
@@ -485,17 +487,17 @@ function NewArticlePageContent() {
     // SOLUÇÃO: Analisar automaticamente as classes CSS para determinar font-weight real
     // - Classes com font-weight >= 700: converter para <strong>
     // - Classes com font-weight < 700: apenas remover o span, manter texto normal
-    
+
     // Converter tags <b> e <i> do Word para HTML padrão
     content = content.replace(/<b[^>]*>/gi, '<strong>')
     content = content.replace(/<\/b>/gi, '</strong>')
     content = content.replace(/<i[^>]*>/gi, '<em>')
     content = content.replace(/<\/i>/gi, '</em>')
-    
+
     // Analisar as classes CSS do Word para determinar quais têm font-weight:700
     // Extrair definições de classes do CSS inline
     const cssClassDefinitions = content.match(/\.c\d+\{[^}]*font-weight:\s*(\d+)[^}]*\}/g) || []
-    
+
     // Mapear classes para seus font-weight
     const classToFontWeight: { [key: string]: number } = {}
     cssClassDefinitions.forEach(def => {
@@ -505,12 +507,12 @@ function NewArticlePageContent() {
         classToFontWeight[classMatch[1]] = parseInt(weightMatch[1])
       }
     })
-    
+
     // Processar spans baseado no font-weight real das classes
     // Para cada classe encontrada, aplicar a formatação correta
     Object.entries(classToFontWeight).forEach(([className, fontWeight]) => {
       const regex = new RegExp(`<span[^>]*class="[^"]*${className}[^"]*"[^>]*>([^<]*)</span>`, 'gi')
-      
+
       if (fontWeight >= 700) {
         // Negrito - converter para <strong>
         content = content.replace(regex, '<strong>$1</strong>')
@@ -519,22 +521,22 @@ function NewArticlePageContent() {
         content = content.replace(regex, '$1')
       }
     })
-    
+
     // Remover spans simples (sem formatação especial)
     content = content.replace(
       /<span[^>]*>([^<]*)<\/span>/g,
       '$1'
     )
-    
+
     // CORREÇÃO: Remover padrão específico <span ><strong></span> que causa problemas no TinyMCE
     // Este padrão é gerado pelo Word e causa tags <strong> desnecessárias na edição
     content = content.replace(/<span\s*>\s*<strong>\s*<\/strong>\s*<\/span>/g, '')
     content = content.replace(/<span\s*>\s*<strong>\s*<\/strong>/g, '')
     content = content.replace(/<span\s*>\s*<\/strong>\s*<\/span>/g, '')
-    
+
     // Remover tags <strong> vazias que possam ter sobrado
     content = content.replace(/<strong>\s*<\/strong>/g, '')
-    
+
     return content
   }
 
@@ -545,40 +547,40 @@ function NewArticlePageContent() {
       /<ul[^>]*>/gi,
       '<ul>'
     )
-    
+
     content = content.replace(
       /<li[^>]*>/gi,
       '<li>'
     )
-    
+
     // Limpar classes específicas do Word nas listas
     content = content.replace(
       /class="[^"]*"/g,
       ''
     )
-    
+
     // Remover atributos específicos do Word
     content = content.replace(
       /li-bullet-[^"]*"/g,
       ''
     )
-    
+
     content = content.replace(
       /lst-kix_[^"]*"/g,
       ''
     )
-    
+
     // Limpar espaços extras dentro das tags
     content = content.replace(
       /<ul\s+>/g,
       '<ul>'
     )
-    
+
     content = content.replace(
       /<li\s+>/g,
       '<li>'
     )
-    
+
     return content
   }
 
@@ -681,7 +683,7 @@ function NewArticlePageContent() {
                   <Tag className="h-4 w-4 inline mr-1" />
                   Categoria *
                 </label>
-                <LoadingSelect 
+                <LoadingSelect
                   isLoading={loading && categories.length === 0}
                   loadingText="Carregando categorias..."
                   className="w-full"
@@ -712,7 +714,7 @@ function NewArticlePageContent() {
                   <User className="h-4 w-4 inline mr-1" />
                   Autor *
                 </label>
-                <LoadingSelect 
+                <LoadingSelect
                   isLoading={loading && authors.length === 0}
                   loadingText="Carregando autores..."
                   className="w-full"
@@ -827,7 +829,7 @@ function NewArticlePageContent() {
                       onChange={handleFileUpload}
                       className="hidden"
                     />
-                    
+
                     {/* Botão para importar HTML do Word */}
                     <button
                       type="button"
@@ -837,7 +839,7 @@ function NewArticlePageContent() {
                       <Upload className="h-4 w-4" />
                       Importar HTML
                     </button>
-                    
+
                     <button
                       type="button"
                       onClick={convertWordFormatting}
@@ -861,11 +863,11 @@ function NewArticlePageContent() {
                     </button>
                   </div>
                 </div>
-                
+
                 {showPreview ? (
                   <div className="w-full p-4 border border-gray-300 rounded-lg bg-gray-50 min-h-[400px] max-h-[600px] overflow-y-auto">
-                    <div 
-                      dangerouslySetInnerHTML={{ __html: content }} 
+                    <div
+                      dangerouslySetInnerHTML={{ __html: content }}
                       style={{
                         fontFamily: 'system-ui, -apple-system, sans-serif',
                         lineHeight: '1.6',
@@ -973,7 +975,7 @@ function NewArticlePageContent() {
                   </div>
                 </div>
               )}
-              
+
               {success && (
                 <div className="p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg">
                   <div className="flex items-center gap-2">
@@ -982,7 +984,7 @@ function NewArticlePageContent() {
                   </div>
                 </div>
               )}
-              
+
               {/* Botões de ação */}
               <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
                 <Link
